@@ -1,0 +1,15 @@
+[package]
+name    = "data-macros"
+version = "0.0.0"
+authors = ["Casey Rodarmor <casey@rodarmor.com>"]
+edition = "2018"
+publish = false
+
+[lib]
+proc-macro = true
+
+[dependencies]
+pretty_assertions = "0.6.1"
+proc-macro2       = "1.0.12"
+quote             = "1.0.4"
+syn               = "1.0.18"
