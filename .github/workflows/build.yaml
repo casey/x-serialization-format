@@ -14,11 +14,12 @@ jobs:
   all:
     name: All
 
-    matrix:
-      os:
-      - macos-latest
-      - ubuntu-latest
-      - windows-latest
+    strategy:
+      matrix:
+        os:
+        - macos-latest
+        - ubuntu-latest
+        - windows-latest
 
     runs-on: ${{matrix.os}}
 
@@ -71,6 +72,7 @@ jobs:
       run: cargo clippy --all
 
     - name: Lint
+      if: matrix.os == 'macos-latest'
       run: |
         brew install ripgrep
         ./bin/lint

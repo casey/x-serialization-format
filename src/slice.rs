@@ -25,7 +25,7 @@ impl<'a, T: View> IntoIterator for &'a Slice<T> {
   type Item = &'a T;
 
   fn into_iter(self) -> Self::IntoIter {
-    self.as_ref().into_iter()
+    self.as_ref().iter()
   }
 }
 
