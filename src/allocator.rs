@@ -150,13 +150,23 @@ mod tests {
   #[test]
   fn bad_offset() {
     let buffer = &mut [0, 0, 0, 0];
-    let mut allocator = Allocator::new(buffer).unwrap();
     let mut offset = Offset::null();
+
+    let start = &offset as *const Offset<u8> as *const u8;
+    let end = start.wrapping_add(mem::size_of::<Offset<u8>>());
+
+    let error = Error::ValueNotInBuffer {
+      buffer: buffer.try_as_ptr_range().unwrap(),
+      value: Range { start, end },
+    };
+
+    let mut allocator = Allocator::new(buffer).unwrap();
+
     assert_eq!(
       allocator
         .store_slice::<u8>(&mut offset, &[1, 2, 3, 4])
         .unwrap_err(),
-      todo!(),
+      error,
     );
   }
 
