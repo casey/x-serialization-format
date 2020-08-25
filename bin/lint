@@ -2,7 +2,10 @@
 
 set -euxo pipefail
 
+# TODO: replace pattern with the following once todos are gone:
+# 'fixme|todo|xxx|todo!|#\[ignore\]'
+
 ! rg \
   --glob !bin/lint \
   --ignore-case \
-  'FIXME|TODO|XXX|todo!|#\[ignore\]'
+  'fixme|xxx'

@@ -4,11 +4,11 @@ version = "0.0.0"
 authors = ["Casey Rodarmor <casey@rodarmor.com>"]
 edition = "2018"
 
-[dependencies.data-macros]
-path = "data-macros"
+# [dependencies.data-macros]
+# path = "data-macros"
 
 [workspace]
 members = [
   # proc macros
-  "data-macros",
+  # "data-macros",
 ]
