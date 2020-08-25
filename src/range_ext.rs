@@ -12,7 +12,10 @@ impl RangeExt for Range<*const u8> {
     let end = start.wrapping_add(size);
 
     if end < start {
-      todo!()
+      return Err(Error::Internal {
+        message: "check_value_in_buffer: Value wraps around memory space. This should never \
+                  happen.",
+      });
     }
 
     if start < self.start || end > self.end {
