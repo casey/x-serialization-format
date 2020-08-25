@@ -14,11 +14,12 @@ jobs:
   all:
     name: All
 
-    matrix:
-      os:
-      - macos-latest
-      - ubuntu-latest
-      - windows-latest
+    strategy:
+      matrix:
+        os:
+        - macos-latest
+        - ubuntu-latest
+        - windows-latest
 
     runs-on: ${{matrix.os}}
 
