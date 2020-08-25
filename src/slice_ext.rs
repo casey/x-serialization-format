@@ -7,7 +7,9 @@ pub(crate) trait SliceExt<T> {
   ///
   /// `slice.as_ptr().add(slice.len()` should always be safe, for all valid
   /// slices, however, this is not yet normative, as noted in
-  /// [the comments in the unstable slice::as_ptr_range](https://doc.rust-lang.org/std/primitive.slice.html#method.as_ptr_range).
+  /// [the comments in the unstable slice::as_ptr_range](
+  ///   https://doc.rust-lang.org/std/primitive.slice.html#method.as_ptr_range
+  /// ).
   ///
   /// So, this version, `try_as_ptr_range` returns a `Result`. When
   /// `slice::as_ptr_range` is stabilized, this can be removed.
