@@ -171,27 +171,39 @@ mod tests {
   }
 
   #[test]
-  #[ignore]
   #[rustfmt::skip]
   fn store_slice() {
-    let buffer = &mut [0; 32];
-    let _allocator = Allocator::new(buffer).unwrap();
+    let buffer: &mut [u8] = &mut [0; 48];
+    let mut allocator = Allocator::new(buffer).unwrap();
 
-    let _zero = U64::from(0);
+    let zero = U64::from(0);
 
-    let _one = U64::from(u64::MAX);
+    let one = U64::from(u64::MAX);
 
-    // allocator.store_slice(&[zero, one]).unwrap();
-    // allocator.store_slice(&[one, zero]).unwrap();
+    let offsets = allocator.allocate::<Offset<U64>>(2).unwrap();
 
-    assert_eq!(
-      buffer,
-      &[
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-      ]
-    )
+    allocator.store_slice(&mut offsets[0], &[zero, one]).unwrap();
+    allocator.store_slice(&mut offsets[1], &[one, zero]).unwrap();
+
+    // After allocating, buffer should contain:
+    // +-----+----------+---------------------------------------------+
+    // |0x00 | offset 0 | points to 0x10, value is 0x10 - 0x00 = 0x10 |
+    // |0x08 | offset 1 | points to 0x20, value is 0x20 - 0x08 = 0x18 |
+    // |0x10 | zero     | all zeros                                   |
+    // |0x18 | one      | all ones                                    |
+    // |0x20 | one      | all ones                                    |
+    // |0x28 | zero     | all zeros                                   |
+    // +-----+----------+---------------------------------------------+
+
+    let want: &[u8] = &[
+      0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x18, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+    ];
+
+    assert_eq!(buffer, want);
   }
 }
