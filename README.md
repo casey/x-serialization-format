@@ -49,7 +49,7 @@ rewrite it later.
 
 ## Prior Art
 
-Data is draws inspiration from a ton of other formats.
+Data draws inspiration from many other formats.
 
 The format most similar to Data is probably
 [FIDL](https://fuchsia.dev/fuchsia-src/development/languages/fidl), the Fuchsia
