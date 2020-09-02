@@ -39,6 +39,7 @@ lint:
 	./bin/lint
 
 dev-deps:
+	brew install grip
 	cargo install cargo-watch
 	cargo install cargo-outdated
 
@@ -76,3 +77,6 @@ publish: publish-check
 	git push github {{version}}
 	cargo publish
 	just merge
+
+preview-readme:
+	grip -b README.md
