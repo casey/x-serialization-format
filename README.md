@@ -171,6 +171,11 @@ represent.
 Strings are encoded as a relative offset pointing to the UTF-8 encoded contents
 of the string, and the length of the contents in bytes, encoded as a `u64`
 
+### `CStr`
+
+C strings are encoded as a relative offset pointing to their contents, and the
+length of the string in bytes. The contents are a null-terminated byte sequence.
+
 #### `&[T]`
 
 Slices are encoded as a relative offset pointing to the contents of the slice,
@@ -189,10 +194,10 @@ followed in either case by a relative offset to the contained `T` or `E`.
 
 #### Structs
 
-Structs are encoded as their fields, in-order. Because structs are not encoded
-with any indication of how many fields they contain, it is not possible to make
-backwards compatible changes to structs. For compound types which might need to
-change in the future, see tables.
+Structs are encoded as the encoding of each field, in the order they appear in
+the struct declaration. It is not possible to make backwards compatible changes
+to structs. For compound types which might need to change in the future, see
+tables.
 
 #### Enums
 
@@ -205,10 +210,29 @@ fields of the enum.
 Because the encoding tells the decoder the enum's variant, variants can be
 added and removed from enums.
 
+However, since the fields of the enum are encoded as a struct, fields cannot be
+added to and removed from enum variants.
+
 ### Tables
 
 Tables are like structs, but fields can be added and removed without breaking
-backwards compatibility.
+backwards compatibility. Here is an example table declaration:
 
-Tables are encoded as a `u64` `len`, followed by `len` count relative offsets
-to the fields of the table.
+```rust
+#[data::table]
+impl MyTable {
+  #[index(0)]
+  fn foo(&self) -> &u64;
+  #[index(1)]
+  fn bar(&self) -> Option<&str>;
+}
+```
+
+Fields are identified by a numeric index. New fields can be added, and fields
+with an `Option` value can be removed.
+
+Tables are represented as a `u64`, which gives the number of fields in the
+encoded value, followed by a relative offset to each field.
+
+If fields at the end of the table are not present, the encoder will skip those
+fields.
