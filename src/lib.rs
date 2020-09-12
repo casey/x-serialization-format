@@ -1,3 +1,6 @@
+#![feature(generic_associated_types)]
+#![allow(unused)]
+#![allow(incomplete_features)]
 #![no_std]
 
 #[cfg(test)]
@@ -10,6 +13,7 @@ mod error;
 mod offset;
 mod primitive;
 mod range_ext;
+mod redo;
 mod result;
 mod size;
 mod slice;
@@ -20,7 +24,6 @@ mod u8;
 mod unit;
 mod value;
 mod view;
-mod x;
 
 #[cfg(test)]
 mod test;
