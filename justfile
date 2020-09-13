@@ -12,7 +12,7 @@ export RUST_LOG := log
 
 # watch filesystem for changes and rerun tests
 watch +ARGS='':
-	cargo watch --clear --exec 'test {{ARGS}}'
+	cargo watch --clear --exec 'test --all {{ARGS}}'
 
 push:
 	! git branch | grep '* master'

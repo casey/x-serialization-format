@@ -1,6 +1,6 @@
 use crate::common::*;
 
-// #[derive(X)]
+#[derive(X)]
 // #[x(struct = FooStruct)]
 struct Foo {
   a: u16,
@@ -72,12 +72,6 @@ impl<A: Allocator, C: Continuation<A>> FooB<A, C> {
 impl<A: Allocator, C: Continuation<A>> Continuation<A> for FooB<A, C> {
   fn continuation(allocator: A) -> Self {
     FooB(allocator, PhantomData)
-  }
-}
-
-impl Foo {
-  fn store<A: Allocator>(allocator: A) -> <Foo as X>::Serializer<A, Done> {
-    <Foo as X>::Serializer::<A, Done>::new(allocator)
   }
 }
 
