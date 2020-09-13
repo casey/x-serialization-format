@@ -1,6 +1,6 @@
 use crate::common::*;
 
-#[derive(X)]
+// #[derive(X)]
 // #[x(struct = FooStruct)]
 struct Foo {
   a: u16,
@@ -18,8 +18,8 @@ struct FooStruct {
   b: <u16 as X>::View,
 }
 
-impl From<FooStruct> for Foo {
-  fn from(value: FooStruct) -> Self {
+impl From<&FooStruct> for Foo {
+  fn from(value: &FooStruct) -> Self {
     Self {
       a: value.a.into(),
       b: value.b.into(),

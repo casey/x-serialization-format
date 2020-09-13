@@ -15,3 +15,6 @@ mod u16;
 mod x;
 
 mod foo;
+
+#[doc(hidden)]
+pub use core;

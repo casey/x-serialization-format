@@ -7,7 +7,7 @@ pub(crate) struct Structure {
   field_types:     Vec<Type>,
   ident:           Ident,
   input:           DataStruct,
-  serializers:     Vec<Ident>,
+  serializer:      Ident,
   x:               TokenStream,
 }
 
@@ -30,53 +30,10 @@ impl Structure {
       Fields::Unit => Vec::new(),
     };
 
-    let serializers = match &input.fields {
-      Fields::Named(fields) => fields
-        .named
-        .iter()
-        .map(|field| {
-          let mut name = ident.to_string();
-          name.push_str(
-            &field
-              .ident
-              .as_ref()
-              .expect("record structs fields always have idents")
-              .to_string()
-              .to_camel_case(),
-          );
-          Ident::new(&name, Span::call_site())
-        })
-        .collect(),
-      Fields::Unnamed(fields) => fields
-        .unnamed
-        .iter()
-        .enumerate()
-        .map(|(index, _)| {
-          let mut name = ident.to_string();
-          name.push_str(match index {
-            0 => "Zero",
-            1 => "One",
-            2 => "Two",
-            3 => "Three",
-            4 => "Four",
-            5 => "Five",
-            6 => "Six",
-            7 => "Seven",
-            8 => "Eight",
-            9 => "Nine",
-            _ => panic!(
-              "Please open a pull request on https://github.com/casey/x requesting that larger \
-               tuple structs be supported"
-            ),
-          });
-          Ident::new(&name, Span::call_site())
-        })
-        .collect(),
-      Fields::Unit => {
-        let mut name = ident.to_string();
-        name.push_str("Serializer");
-        vec![Ident::new(&name, Span::call_site())]
-      },
+    let serializer = {
+      let mut name = ident.to_string();
+      name.push_str("Serializer");
+      Ident::new(&name, Span::call_site())
     };
 
     Self {
@@ -84,7 +41,7 @@ impl Structure {
       field_types,
       ident,
       input,
-      serializers,
+      serializer,
       x,
     }
   }
@@ -130,12 +87,12 @@ impl Tokens for Structure {
       Fields::Unit => quote!(),
     };
 
-    let initial_serializer = &self.serializers[0];
+    let serializer = &self.serializer;
 
     quote!(
       impl #x::X for #ident {
         type View = #view;
-        type Serializer<A: ::x::Allocator, C: ::x::Continuation<A>> = #initial_serializer<A, C>;
+        type Serializer<A: #x::Allocator, C: #x::Continuation<A>> = #serializer<A, C>;
       }
 
       struct #view #body
@@ -143,6 +100,27 @@ impl Tokens for Structure {
       impl From<&#view> for #ident {
         fn from(value: &#view) -> Self {
           #ident #from_constructor
+        }
+      }
+
+      struct #serializer<A: Allocator, C: Continuation<A>> {
+        allocator: A,
+        #[allow(unused)]
+        continuation: #x::core::marker::PhantomData<C>,
+      }
+
+      impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for #serializer<A, C> {
+        type Native = #ident;
+
+        fn new(allocator: A) -> Self {
+          Self {
+            continuation: #x::core::marker::PhantomData,
+            allocator,
+          }
+        }
+
+        fn serialize<B: #x::core::borrow::Borrow<Self::Native>>(self, native: B) -> C {
+          todo!()
         }
       }
     )
@@ -171,6 +149,27 @@ mod tests {
           Foo
         }
       }
+
+      struct FooSerializer<A: Allocator, C: Continuation<A>> {
+        allocator: A,
+        #[allow(unused)]
+        continuation: ::x::core::marker::PhantomData<C>,
+      }
+
+      impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for FooSerializer<A, C> {
+        type Native = Foo;
+
+        fn new(allocator: A) -> Self {
+          Self {
+            continuation: ::x::core::marker::PhantomData,
+            allocator,
+          }
+        }
+
+        fn serialize<B: ::x::core::borrow::Borrow<Self::Native>>(self, native: B) -> C {
+          C::continuation(self.allocator)
+        }
+      }
     );
   }
 
@@ -185,7 +184,7 @@ mod tests {
       impl ::x::X for Foo {
         type View = FooView;
 
-        type Serializer<A: ::x::Allocator, C: ::x::Continuation<A>> = FooA<A, C>;
+        type Serializer<A: ::x::Allocator, C: ::x::Continuation<A>> = FooSerializer<A, C>;
       }
 
       struct FooView {
@@ -201,6 +200,33 @@ mod tests {
           }
         }
       }
+
+      struct FooSerializer<A: Allocator, C: Continuation<A>> {
+        allocator: A,
+        #[allow(unused)]
+        continuation: ::x::core::marker::PhantomData<C>,
+      }
+
+      impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for FooSerializer<A, C> {
+        type Native = Foo;
+
+        fn new(allocator: A) -> Self {
+          Self {
+            continuation: ::x::core::marker::PhantomData,
+            allocator,
+          }
+        }
+
+        fn serialize<B: ::x::core::borrow::Borrow<Self::Native>>(self, native: B) -> C {
+          let native = native.borrow();
+
+          self
+            .a_begin()
+            .serialize(&native.a)
+            .b_begin()
+            .serialize(&native.b)
+        }
+      }
     );
   }
 
@@ -212,7 +238,7 @@ mod tests {
       impl ::x::X for Foo {
         type View = FooView;
 
-        type Serializer<A: ::x::Allocator, C: ::x::Continuation<A>> = FooZero<A, C>;
+        type Serializer<A: ::x::Allocator, C: ::x::Continuation<A>> = FooSerializer<A, C>;
       }
 
       struct FooView(<u16 as ::x::X>::View, <String as ::x::X>::View,);
@@ -220,6 +246,33 @@ mod tests {
       impl From<&FooView> for Foo {
         fn from(value: &FooView) -> Self {
           Foo(value.0.into(), value.1.into(),)
+        }
+      }
+
+      struct FooSerializer<A: Allocator, C: Continuation<A>> {
+        allocator: A,
+        #[allow(unused)]
+        continuation: ::x::core::marker::PhantomData<C>,
+      }
+
+      impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for FooSerializer<A, C> {
+        type Native = Foo;
+
+        fn new(allocator: A) -> Self {
+          Self {
+            continuation: ::x::core::marker::PhantomData,
+            allocator,
+          }
+        }
+
+        fn serialize<B: ::x::core::borrow::Borrow<Self::Native>>(self, native: B) -> C {
+          let native = native.borrow();
+
+          self
+            .zero_begin()
+            .serialize(&native.a)
+            .one_begin()
+            .serialize(&native.b)
         }
       }
     );

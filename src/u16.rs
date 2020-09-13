@@ -11,8 +11,8 @@ impl X for u16 {
   type View = U16;
 }
 
-impl From<U16> for u16 {
-  fn from(value: U16) -> u16 {
+impl From<&U16> for u16 {
+  fn from(value: &U16) -> u16 {
     u16::from_le_bytes(value.bytes)
   }
 }
