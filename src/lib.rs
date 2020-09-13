@@ -9,7 +9,6 @@ mod allocator;
 mod common;
 mod continuation;
 mod done;
-mod into_allocator;
 mod serializer;
 mod slice_allocator;
 mod u16;

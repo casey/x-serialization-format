@@ -17,12 +17,6 @@ impl From<U16> for u16 {
   }
 }
 
-impl<A: Allocator, C> IntoAllocator<A> for U16Serializer<A, C> {
-  fn into_allocator(self) -> A {
-    self.0
-  }
-}
-
 pub(crate) struct U16Serializer<A: Allocator, C>(A, PhantomData<C>);
 
 impl<A: Allocator, C: Continuation<A>> U16Serializer<A, C> {

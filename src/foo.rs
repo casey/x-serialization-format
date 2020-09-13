@@ -29,12 +29,6 @@ impl From<FooStruct> for Foo {
 
 struct FooA<A: Allocator, C: Continuation<A>>(A, PhantomData<C>);
 
-impl<A: Allocator, C: Continuation<A>> IntoAllocator<A> for FooA<A, C> {
-  fn into_allocator(self) -> A {
-    self.0
-  }
-}
-
 impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for FooA<A, C> {
   type Native = Foo;
 
