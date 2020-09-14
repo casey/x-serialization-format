@@ -12,6 +12,7 @@ mod done;
 mod serializer;
 mod slice_allocator;
 mod u16;
+mod view;
 mod x;
 
 mod foo;

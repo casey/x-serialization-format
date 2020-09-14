@@ -12,8 +12,16 @@ impl X for u16 {
 }
 
 impl From<&U16> for u16 {
-  fn from(value: &U16) -> u16 {
-    u16::from_le_bytes(value.bytes)
+  fn from(view: &U16) -> Self {
+    view.to_native()
+  }
+}
+
+impl View for U16 {
+  type Native = u16;
+
+  fn to_native(&self) -> Self::Native {
+    u16::from_le_bytes(self.bytes)
   }
 }
 
@@ -38,8 +46,3 @@ impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for U16Serializer<A, C> 
     C::continuation(self.0)
   }
 }
-
-// want to support:
-// &u16 - native format
-// &U16 - buffer format
-// &[u8] - packed format

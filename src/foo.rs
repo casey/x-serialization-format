@@ -1,15 +1,10 @@
 use crate::common::*;
 
-// #[derive(X)]
+#[derive(X)]
 // #[x(struct = FooStruct)]
 struct Foo {
   a: u16,
   b: u16,
-}
-
-impl X for Foo {
-  type Serializer<A: Allocator, C: Continuation<A>> = FooA<A, C>;
-  type View = FooStruct;
 }
 
 #[repr(C)]
@@ -20,9 +15,17 @@ struct FooStruct {
 
 impl From<&FooStruct> for Foo {
   fn from(value: &FooStruct) -> Self {
-    Self {
-      a: value.a.into(),
-      b: value.b.into(),
+    value.to_native()
+  }
+}
+
+impl View for FooStruct {
+  type Native = Foo;
+
+  fn to_native(&self) -> Self::Native {
+    Foo {
+      a: self.a.to_native(),
+      b: self.b.to_native(),
     }
   }
 }

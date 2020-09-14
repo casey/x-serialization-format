@@ -6,9 +6,12 @@ macro_rules! assert_derive_x_expansion_eq {
     {
       let expansion = crate::derive_x_inner(quote::quote!($item)).expect("proc macro invocation failed");
 
-      syn::parse2::<File>(expansion.clone()).expect("expansion parsing failed");
-
       let have = expansion.to_string();
+
+      if let Err(err) = syn::parse2::<File>(expansion.clone()) {
+        panic!("Expansion parsing failed: {}\n{}", err, have);
+      }
+
       let want = quote::quote!($($expansion)*).to_string();
       pretty_assertions::assert_eq!(have, want);
     }
