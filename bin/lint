@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+set -euxo pipefail
+
+# TODO: replace pattern with the following once todos are gone:
+# 'fixme|todo|xxx|todo!|#\[ignore\]'
+
+! rg \
+  --glob !bin/lint \
+  --ignore-case \
+  'fixme|xxx'
