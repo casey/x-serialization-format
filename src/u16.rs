@@ -1,5 +1,3 @@
-use crate::common::*;
-
 #[repr(C)]
 pub struct U16 {
   bytes: [u8; 2],
@@ -26,13 +24,6 @@ impl View for U16 {
 }
 
 pub struct U16Serializer<A: Allocator, C>(A, PhantomData<C>);
-
-impl<A: Allocator, C: Continuation<A>> U16Serializer<A, C> {
-  pub(crate) fn set(mut self, value: u16) -> C {
-    self.0.write(&value.to_le_bytes());
-    C::continuation(self.0)
-  }
-}
 
 impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for U16Serializer<A, C> {
   type Native = u16;

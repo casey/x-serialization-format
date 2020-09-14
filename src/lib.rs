@@ -18,7 +18,7 @@ pub use crate::{
 };
 
 // structs and enums
-pub use crate::slice_allocator::SliceAllocator;
+pub use crate::{done::Done, slice_allocator::SliceAllocator};
 
 #[doc(hidden)]
 /// This export is used by `x-derive` to access `core`

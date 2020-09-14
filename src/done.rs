@@ -12,7 +12,7 @@ impl Done {
 }
 
 impl<A: Allocator> Continuation<A> for Done {
-  fn continuation(allocator: A) -> Self {
+  fn continuation(_allocator: A) -> Self {
     Done
   }
 }
