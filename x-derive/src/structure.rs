@@ -3,13 +3,14 @@ use crate::common::*;
 use heck::CamelCase;
 
 pub(crate) struct Structure {
-  field_accessors:   Vec<TokenTree>,
-  field_types:       Vec<Type>,
-  ident:             Ident,
-  input:             DataStruct,
-  serialize_methods: Vec<Ident>,
-  serializers:       Vec<Ident>,
-  x:                 TokenStream,
+  field_accessors:    Vec<TokenTree>,
+  field_types:        Vec<Type>,
+  ident:              Ident,
+  input:              DataStruct,
+  serializer_methods: Vec<Ident>,
+  serialize_methods:  Vec<Ident>,
+  serializers:        Vec<Ident>,
+  x:                  TokenStream,
 }
 
 fn number(index: usize) -> &'static str {
@@ -43,16 +44,9 @@ impl Structure {
 
     let serializer = |index: usize, field_name: Option<&str>| {
       if index == 0 {
-        let mut name = ident.to_string();
-        name.push_str("Serializer");
-        Ident::new(&name, Span::call_site())
+        format_ident!("{}Serializer", ident)
       } else {
-        let name = format!(
-          "{}Serializer{}",
-          ident.to_string(),
-          field_name.unwrap().to_camel_case()
-        );
-        Ident::new(&name, Span::call_site())
+        format_ident!("{}Serializer{}", ident, field_name.unwrap().to_camel_case())
       }
     };
 
@@ -72,22 +66,33 @@ impl Structure {
       Fields::Unit => vec![serializer(0, None)],
     };
 
+    let serializer_methods = match &input.fields {
+      Fields::Named(fields) => fields
+        .named
+        .iter()
+        .map(|field| format_ident!("{}_serializer", field.ident.as_ref().unwrap()))
+        .collect(),
+      Fields::Unnamed(fields) => fields
+        .unnamed
+        .iter()
+        .enumerate()
+        .map(|(index, _)| format_ident!("{}_serializer", number(index)))
+        .collect(),
+      Fields::Unit => Vec::new(),
+    };
+
     let serialize_methods = match &input.fields {
       Fields::Named(fields) => fields
         .named
         .iter()
-        .map(|field| {
-          let mut name = field.ident.as_ref().unwrap().to_string();
-          name.push_str("_serializer");
-          Ident::new(&name, Span::call_site())
-        })
+        .map(|field| field.ident.as_ref().unwrap().clone())
         .collect(),
       Fields::Unnamed(fields) => fields
         .unnamed
         .iter()
         .enumerate()
         .map(|(index, _)| {
-          let name = format!("{}_serializer", number(index));
+          let name = number(index);
           Ident::new(&name, Span::call_site())
         })
         .collect(),
@@ -100,6 +105,7 @@ impl Structure {
       ident,
       input,
       serializers,
+      serializer_methods,
       serialize_methods,
       x,
     }
@@ -117,12 +123,8 @@ impl Structure {
     &self.field_accessors
   }
 
-  fn ident(&self) -> &Ident {
-    &self.ident
-  }
-
-  fn serialize_methods(&self) -> &[Ident] {
-    &self.serialize_methods
+  fn serializer_methods(&self) -> &[Ident] {
+    &self.serializer_methods
   }
 }
 
@@ -148,32 +150,38 @@ impl Tokens for Structure {
       Ident::new(&name, Span::call_site())
     };
 
-    let from_constructor = match &self.input.fields {
-      Fields::Named(fields) => quote!({#(#accessors: value.#accessors.into(),)*}),
-      Fields::Unnamed(fields) => quote!((#(value.#accessors.into(),)*)),
-      Fields::Unit => quote!(),
-    };
-
     let serializers = &self.serializers;
 
     let first_serializer = &self.serializers[0];
 
-    let serialize_methods = self.serialize_methods();
+    let serializer_methods = self.serializer_methods();
 
     let serialize_inner = if self.field_count() == 0 {
       quote!(C::continuation(self.allocator))
     } else {
       quote!(
         let native = native.borrow();
-        self #(.#serialize_methods().serialize(&native.#accessors))*
+        self #(.#serializer_methods().serialize(&native.#accessors))*
       )
     };
 
     let to_native_inner = match &self.input.fields {
-      Fields::Named(fields) => quote!({#(#accessors: self.#accessors.to_native(),)*}),
-      Fields::Unnamed(fields) => quote!((#(self.#accessors.to_native(),)*)),
+      Fields::Named(_) => quote!({#(#accessors: self.#accessors.to_native(),)*}),
+      Fields::Unnamed(_) => quote!((#(self.#accessors.to_native(),)*)),
       Fields::Unit => quote!(),
     };
+
+    let continuations = (0..serializers.len()).into_iter().map(|i| {
+      if let Some(serializer) = serializers.get(i + 1) {
+        quote!(#serializer<A, C>)
+      } else {
+        quote!(C)
+      }
+    });
+
+    let serialize_methods = &self.serialize_methods;
+
+    let continuable = &self.serializers[1..];
 
     quote!(
       impl #x::X for #ident {
@@ -203,13 +211,15 @@ impl Tokens for Structure {
         #[allow(unused)]
         continuation: #x::core::marker::PhantomData<C>,
       }
+      )*
 
+      #(
       impl <A: Allocator, C: Continuation<A>> #serializers<A, C> {
-        fn field(self, value: Value) -> FooSerializerOne<A, C> {
-          todo!()
+        fn #serialize_methods(self, value: #types) -> #continuations {
+          self.#serializer_methods().serialize(value)
         }
 
-        fn #serialize_methods(self) -> <#types as #x::X>::Serializer<A, NextSerializer<A, C>> {
+        fn #serializer_methods(self) -> <#types as #x::X>::Serializer<A, #continuations> {
           <#types as #x::X>::Serializer::new(self.allocator)
         }
       }
@@ -229,6 +239,17 @@ impl Tokens for Structure {
           #serialize_inner
         }
       }
+
+      #(
+      impl<A: #x::Allocator, C: #x::Continuation<A>> #x::Continuation<A> for #continuable<A, C> {
+        fn continuation(allocator: A) -> Self {
+          #continuable {
+            continuation: #x::core::marker::PhantomData,
+            allocator,
+          }
+        }
+      }
+      )*
     )
   }
 }
@@ -335,6 +356,26 @@ mod tests {
         continuation: ::x::core::marker::PhantomData<C>,
       }
 
+      impl<A: Allocator, C: Continuation<A>> FooSerializer<A, C> {
+        fn a(self, value: u16) -> FooSerializerB<A, C> {
+          self.a_serializer().serialize(value)
+        }
+
+        fn a_serializer(self) -> <u16 as ::x::X>::Serializer<A, FooSerializerB<A, C> > {
+          <u16 as ::x::X>::Serializer::new(self.allocator)
+        }
+      }
+
+      impl<A: Allocator, C: Continuation<A>> FooSerializerB<A, C> {
+        fn b(self, value: String) -> C {
+          self.b_serializer().serialize(value)
+        }
+
+        fn b_serializer(self) -> <String as ::x::X>::Serializer<A, C> {
+          <String as ::x::X>::Serializer::new(self.allocator)
+        }
+      }
+
       impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for FooSerializer<A, C> {
         type Native = Foo;
 
@@ -356,29 +397,9 @@ mod tests {
         }
       }
 
-      impl<A: Allocator, C: Continuation<A>> FooSerializer<A, C> {
-        fn a(self, value: u16) -> FooSerializerB<A, C> {
-          self.a_serializer().serialize(value)
-        }
-
-        fn a_serializer(self) -> <u16 as X>::Serializer<A, FooSerializerB<A, C>> {
-          <u16 as X>::Serializer::new(self.0)
-        }
-      }
-
-      impl<A: Allocator, C: Continuation<A>> FooSerializerB<A, C> {
-        fn b(self, value: String) -> C {
-          self.one_serializer().serialize(value)
-        }
-
-        fn b_serializer(self) -> <String as X>::Serializer<A, C> {
-          <String as X>::Serializer::new(self.allocator)
-        }
-      }
-
-      impl<A: Allocator, C: Continuation<A>> Continuation<A> for FooSerializerB<A, C> {
+      impl<A: ::x::Allocator, C: ::x::Continuation<A>> ::x::Continuation<A> for FooSerializerB<A, C> {
         fn continuation(allocator: A) -> Self {
-          FooSerializerOne {
+          FooSerializerB {
             continuation: ::x::core::marker::PhantomData,
             allocator,
           }
@@ -426,6 +447,26 @@ mod tests {
         continuation: ::x::core::marker::PhantomData<C>,
       }
 
+      impl<A: Allocator, C: Continuation<A>> FooSerializer<A, C> {
+        fn zero(self, value: u16) -> FooSerializerOne<A, C> {
+          self.zero_serializer().serialize(value)
+        }
+
+        fn zero_serializer(self) -> <u16 as ::x::X>::Serializer<A, FooSerializerOne<A, C> > {
+          <u16 as ::x::X>::Serializer::new(self.allocator)
+        }
+      }
+
+      impl<A: Allocator, C: Continuation<A>> FooSerializerOne<A, C> {
+        fn one(self, value: String) -> C {
+          self.one_serializer().serialize(value)
+        }
+
+        fn one_serializer(self) -> <String as ::x::X>::Serializer<A, C> {
+          <String as ::x::X>::Serializer::new(self.allocator)
+        }
+      }
+
       impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for FooSerializer<A, C> {
         type Native = Foo;
 
@@ -447,27 +488,7 @@ mod tests {
         }
       }
 
-      impl<A: Allocator, C: Continuation<A>> FooSerializer<A, C> {
-        fn zero(self, value: u16) -> FooSerializerOne<A, C> {
-          self.zero_serializer().serialize(value)
-        }
-
-        fn zero_serializer(self) -> <u16 as X>::Serializer<A, FooSerializerOne<A, C>> {
-          <u16 as X>::Serializer::new(self.0)
-        }
-      }
-
-      impl<A: Allocator, C: Continuation<A>> FooSerializerOne<A, C> {
-        fn one(self, value: String) -> C {
-          self.one_serializer().serialize(value)
-        }
-
-        fn one_serializer(self) -> <String as X>::Serializer<A, C> {
-          <String as X>::Serializer::new(self.allocator)
-        }
-      }
-
-      impl<A: Allocator, C: Continuation<A>> Continuation<A> for FooSerializerOne<A, C> {
+      impl<A: ::x::Allocator, C: ::x::Continuation<A>> ::x::Continuation<A> for FooSerializerOne<A, C> {
         fn continuation(allocator: A) -> Self {
           FooSerializerOne {
             continuation: ::x::core::marker::PhantomData,
