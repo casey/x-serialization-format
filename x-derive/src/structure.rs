@@ -8,7 +8,7 @@ pub(crate) struct Structure {
   ident:             Ident,
   input:             DataStruct,
   serialize_methods: Vec<Ident>,
-  serializer:        Ident,
+  serializers:       Vec<Ident>,
   x:                 TokenStream,
 }
 
@@ -41,10 +41,35 @@ impl Structure {
       Fields::Unit => Vec::new(),
     };
 
-    let serializer = {
-      let mut name = ident.to_string();
-      name.push_str("Serializer");
-      Ident::new(&name, Span::call_site())
+    let serializer = |index: usize, field_name: Option<&str>| {
+      if index == 0 {
+        let mut name = ident.to_string();
+        name.push_str("Serializer");
+        Ident::new(&name, Span::call_site())
+      } else {
+        let name = format!(
+          "{}Serializer{}",
+          ident.to_string(),
+          field_name.unwrap().to_camel_case()
+        );
+        Ident::new(&name, Span::call_site())
+      }
+    };
+
+    let serializers = match &input.fields {
+      Fields::Named(fields) => fields
+        .named
+        .iter()
+        .enumerate()
+        .map(|(index, field)| serializer(index, Some(&field.ident.as_ref().unwrap().to_string())))
+        .collect(),
+      Fields::Unnamed(fields) => fields
+        .unnamed
+        .iter()
+        .enumerate()
+        .map(|(index, _)| serializer(index, Some(&number(index))))
+        .collect(),
+      Fields::Unit => vec![serializer(0, None)],
     };
 
     let serialize_methods = match &input.fields {
@@ -74,7 +99,7 @@ impl Structure {
       field_types,
       ident,
       input,
-      serializer,
+      serializers,
       serialize_methods,
       x,
     }
@@ -129,7 +154,9 @@ impl Tokens for Structure {
       Fields::Unit => quote!(),
     };
 
-    let serializer = &self.serializer;
+    let serializers = &self.serializers;
+
+    let first_serializer = &self.serializers[0];
 
     let serialize_methods = self.serialize_methods();
 
@@ -151,7 +178,7 @@ impl Tokens for Structure {
     quote!(
       impl #x::X for #ident {
         type View = #view;
-        type Serializer<A: #x::Allocator, C: #x::Continuation<A>> = #serializer<A, C>;
+        type Serializer<A: #x::Allocator, C: #x::Continuation<A>> = #first_serializer<A, C>;
       }
 
       struct #view #body
@@ -170,13 +197,25 @@ impl Tokens for Structure {
         }
       }
 
-      struct #serializer<A: Allocator, C: Continuation<A>> {
+      #(
+      struct #serializers<A: Allocator, C: Continuation<A>> {
         allocator: A,
         #[allow(unused)]
         continuation: #x::core::marker::PhantomData<C>,
       }
 
-      impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for #serializer<A, C> {
+      impl <A: Allocator, C: Continuation<A>> #serializers<A, C> {
+        fn field(self, value: Value) -> FooSerializerOne<A, C> {
+          todo!()
+        }
+
+        fn #serialize_methods(self) -> <#types as #x::X>::Serializer<A, NextSerializer<A, C>> {
+          <#types as #x::X>::Serializer::new(self.allocator)
+        }
+      }
+      )*
+
+      impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for #first_serializer<A, C> {
         type Native = #ident;
 
         fn new(allocator: A) -> Self {
@@ -290,6 +329,12 @@ mod tests {
         continuation: ::x::core::marker::PhantomData<C>,
       }
 
+      struct FooSerializerB<A: Allocator, C: Continuation<A>> {
+        allocator: A,
+        #[allow(unused)]
+        continuation: ::x::core::marker::PhantomData<C>,
+      }
+
       impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for FooSerializer<A, C> {
         type Native = Foo;
 
@@ -319,12 +364,6 @@ mod tests {
         fn a_serializer(self) -> <u16 as X>::Serializer<A, FooSerializerB<A, C>> {
           <u16 as X>::Serializer::new(self.0)
         }
-      }
-
-      struct FooSerializerB<A: Allocator, C: Continuation<A>> {
-        allocator: A,
-        #[allow(unused)]
-        continuation: ::x::core::marker::PhantomData<C>,
       }
 
       impl<A: Allocator, C: Continuation<A>> FooSerializerB<A, C> {
@@ -381,6 +420,12 @@ mod tests {
         continuation: ::x::core::marker::PhantomData<C>,
       }
 
+      struct FooSerializerOne<A: Allocator, C: Continuation<A>> {
+        allocator: A,
+        #[allow(unused)]
+        continuation: ::x::core::marker::PhantomData<C>,
+      }
+
       impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for FooSerializer<A, C> {
         type Native = Foo;
 
@@ -410,12 +455,6 @@ mod tests {
         fn zero_serializer(self) -> <u16 as X>::Serializer<A, FooSerializerOne<A, C>> {
           <u16 as X>::Serializer::new(self.0)
         }
-      }
-
-      struct FooSerializerOne<A: Allocator, C: Continuation<A>> {
-        allocator: A,
-        #[allow(unused)]
-        continuation: ::x::core::marker::PhantomData<C>,
       }
 
       impl<A: Allocator, C: Continuation<A>> FooSerializerOne<A, C> {
