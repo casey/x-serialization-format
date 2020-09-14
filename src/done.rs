@@ -1,10 +1,10 @@
 use crate::common::*;
 
 #[must_use]
-pub(crate) struct Done;
+pub struct Done;
 
 impl Done {
-  pub(crate) fn done(self) {}
+  pub fn done(self) {}
 }
 
 impl<A: Allocator> Continuation<A> for Done {

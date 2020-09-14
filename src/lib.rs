@@ -1,9 +1,6 @@
 #![no_std]
 #![feature(generic_associated_types)]
-#![allow(unused)]
 #![allow(incomplete_features)]
-
-use common::*;
 
 mod allocator;
 mod common;
@@ -15,7 +12,13 @@ mod u16;
 mod view;
 mod x;
 
-mod foo;
+// traits
+pub use crate::{
+  allocator::Allocator, continuation::Continuation, serializer::Serializer, view::View, x::X,
+};
+
+// structs and enums
+pub use crate::slice_allocator::SliceAllocator;
 
 #[doc(hidden)]
 /// This export is used by `x-derive` to access `core`

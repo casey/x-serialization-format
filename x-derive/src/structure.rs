@@ -207,7 +207,7 @@ impl Tokens for Structure {
 
       #view_getters
 
-      impl View for #view {
+      impl #x::View for #view {
         type Native = #ident;
 
         fn to_native(&self) -> Self::Native {
@@ -222,7 +222,7 @@ impl Tokens for Structure {
       }
 
       #(
-      struct #serializers<A: Allocator, C: Continuation<A>> {
+      struct #serializers<A: #x::Allocator, C: #x::Continuation<A>> {
         allocator: A,
         #[allow(unused)]
         continuation: #x::core::marker::PhantomData<C>,
@@ -230,7 +230,7 @@ impl Tokens for Structure {
       )*
 
       #(
-      impl <A: Allocator, C: Continuation<A>> #serializers<A, C> {
+      impl <A: #x::Allocator, C: #x::Continuation<A>> #serializers<A, C> {
         fn #field_methods(self, value: #types) -> #continuations {
           self.#serializer_methods().serialize(value)
         }
@@ -241,7 +241,7 @@ impl Tokens for Structure {
       }
       )*
 
-      impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for #first_serializer<A, C> {
+      impl<A: #x::Allocator, C: #x::Continuation<A>> #x::Serializer<A, C> for #first_serializer<A, C> {
         type Native = #ident;
 
         fn new(allocator: A) -> Self {
@@ -288,7 +288,7 @@ mod tests {
       #[repr(C)]
       struct FooView;
 
-      impl View for FooView {
+      impl ::x::View for FooView {
         type Native = Foo;
 
         fn to_native(&self) -> Self::Native {
@@ -302,13 +302,13 @@ mod tests {
         }
       }
 
-      struct FooSerializer<A: Allocator, C: Continuation<A>> {
+      struct FooSerializer<A: ::x::Allocator, C: ::x::Continuation<A>> {
         allocator: A,
         #[allow(unused)]
         continuation: ::x::core::marker::PhantomData<C>,
       }
 
-      impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for FooSerializer<A, C> {
+      impl<A: ::x::Allocator, C: ::x::Continuation<A>> ::x::Serializer<A, C> for FooSerializer<A, C> {
         type Native = Foo;
 
         fn new(allocator: A) -> Self {
@@ -355,8 +355,7 @@ mod tests {
         }
       }
 
-
-      impl View for FooView {
+      impl ::x::View for FooView {
         type Native = Foo;
 
         fn to_native(&self) -> Self::Native {
@@ -373,19 +372,19 @@ mod tests {
         }
       }
 
-      struct FooSerializer<A: Allocator, C: Continuation<A>> {
+      struct FooSerializer<A: ::x::Allocator, C: ::x::Continuation<A>> {
         allocator: A,
         #[allow(unused)]
         continuation: ::x::core::marker::PhantomData<C>,
       }
 
-      struct FooSerializerB<A: Allocator, C: Continuation<A>> {
+      struct FooSerializerB<A: ::x::Allocator, C: ::x::Continuation<A>> {
         allocator: A,
         #[allow(unused)]
         continuation: ::x::core::marker::PhantomData<C>,
       }
 
-      impl<A: Allocator, C: Continuation<A>> FooSerializer<A, C> {
+      impl<A: ::x::Allocator, C: ::x::Continuation<A>> FooSerializer<A, C> {
         fn a(self, value: u16) -> FooSerializerB<A, C> {
           self.a_serializer().serialize(value)
         }
@@ -395,7 +394,7 @@ mod tests {
         }
       }
 
-      impl<A: Allocator, C: Continuation<A>> FooSerializerB<A, C> {
+      impl<A: ::x::Allocator, C: ::x::Continuation<A>> FooSerializerB<A, C> {
         fn b(self, value: String) -> C {
           self.b_serializer().serialize(value)
         }
@@ -405,7 +404,7 @@ mod tests {
         }
       }
 
-      impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for FooSerializer<A, C> {
+      impl<A: ::x::Allocator, C: ::x::Continuation<A>> ::x::Serializer<A, C> for FooSerializer<A, C> {
         type Native = Foo;
 
         fn new(allocator: A) -> Self {
@@ -461,7 +460,7 @@ mod tests {
         }
       }
 
-      impl View for FooView {
+      impl ::x::View for FooView {
         type Native = Foo;
 
         fn to_native(&self) -> Self::Native {
@@ -475,19 +474,19 @@ mod tests {
         }
       }
 
-      struct FooSerializer<A: Allocator, C: Continuation<A>> {
+      struct FooSerializer<A: ::x::Allocator, C: ::x::Continuation<A>> {
         allocator: A,
         #[allow(unused)]
         continuation: ::x::core::marker::PhantomData<C>,
       }
 
-      struct FooSerializerOne<A: Allocator, C: Continuation<A>> {
+      struct FooSerializerOne<A: ::x::Allocator, C: ::x::Continuation<A>> {
         allocator: A,
         #[allow(unused)]
         continuation: ::x::core::marker::PhantomData<C>,
       }
 
-      impl<A: Allocator, C: Continuation<A>> FooSerializer<A, C> {
+      impl<A: ::x::Allocator, C: ::x::Continuation<A>> FooSerializer<A, C> {
         fn zero(self, value: u16) -> FooSerializerOne<A, C> {
           self.zero_serializer().serialize(value)
         }
@@ -497,7 +496,7 @@ mod tests {
         }
       }
 
-      impl<A: Allocator, C: Continuation<A>> FooSerializerOne<A, C> {
+      impl<A: ::x::Allocator, C: ::x::Continuation<A>> FooSerializerOne<A, C> {
         fn one(self, value: String) -> C {
           self.one_serializer().serialize(value)
         }
@@ -507,7 +506,7 @@ mod tests {
         }
       }
 
-      impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for FooSerializer<A, C> {
+      impl<A: ::x::Allocator, C: ::x::Continuation<A>> ::x::Serializer<A, C> for FooSerializer<A, C> {
         type Native = Foo;
 
         fn new(allocator: A) -> Self {

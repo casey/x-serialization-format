@@ -1,7 +1,7 @@
 use crate::common::*;
 
 #[repr(C)]
-pub(crate) struct U16 {
+pub struct U16 {
   bytes: [u8; 2],
 }
 use crate::common::*;
@@ -25,7 +25,7 @@ impl View for U16 {
   }
 }
 
-pub(crate) struct U16Serializer<A: Allocator, C>(A, PhantomData<C>);
+pub struct U16Serializer<A: Allocator, C>(A, PhantomData<C>);
 
 impl<A: Allocator, C: Continuation<A>> U16Serializer<A, C> {
   pub(crate) fn set(mut self, value: u16) -> C {

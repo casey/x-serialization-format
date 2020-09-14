@@ -1,5 +1,5 @@
 use crate::common::*;
 
-pub(crate) trait Continuation<A: Allocator> {
+pub trait Continuation<A: Allocator> {
   fn continuation(allocator: A) -> Self;
 }

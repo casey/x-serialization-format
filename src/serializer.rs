@@ -1,6 +1,6 @@
 use crate::common::*;
 
-pub(crate) trait Serializer<A: Allocator, C: Continuation<A>> {
+pub trait Serializer<A: Allocator, C: Continuation<A>> {
   type Native: ?Sized;
 
   fn new(allocator: A) -> Self;

@@ -23,7 +23,7 @@ fn derive_x_inner(input: TokenStream) -> Result<TokenStream, Error> {
 
   let x = {
     if pkg == "x" {
-      quote!(crate)
+      quote!(::x)
     } else if pkg == "x-derive" {
       quote!(::x)
     } else {

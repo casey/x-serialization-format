@@ -1,12 +1,12 @@
 use crate::common::*;
 
-pub(crate) struct SliceAllocator<'slice> {
+pub struct SliceAllocator<'slice> {
   slice:  &'slice mut [u8],
   offset: usize,
 }
 
 impl<'slice> SliceAllocator<'slice> {
-  pub(crate) fn new(slice: &'slice mut [u8]) -> SliceAllocator<'slice> {
+  pub fn new(slice: &'slice mut [u8]) -> SliceAllocator<'slice> {
     Self { slice, offset: 0 }
   }
 }
