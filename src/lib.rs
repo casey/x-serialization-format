@@ -18,4 +18,5 @@ mod x;
 mod foo;
 
 #[doc(hidden)]
+/// This export is used by `x-derive` to access `core`
 pub use core;

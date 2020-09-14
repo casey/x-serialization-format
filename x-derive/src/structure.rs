@@ -4,11 +4,11 @@ use heck::CamelCase;
 
 pub(crate) struct Structure {
   field_accessors:    Vec<TokenTree>,
+  field_methods:      Vec<Ident>,
   field_types:        Vec<Type>,
   ident:              Ident,
   input:              DataStruct,
   serializer_methods: Vec<Ident>,
-  serialize_methods:  Vec<Ident>,
   serializers:        Vec<Ident>,
   x:                  TokenStream,
 }
@@ -81,7 +81,7 @@ impl Structure {
       Fields::Unit => Vec::new(),
     };
 
-    let serialize_methods = match &input.fields {
+    let field_methods = match &input.fields {
       Fields::Named(fields) => fields
         .named
         .iter()
@@ -101,12 +101,12 @@ impl Structure {
 
     Self {
       field_accessors,
+      field_methods,
       field_types,
       ident,
       input,
       serializers,
       serializer_methods,
-      serialize_methods,
       x,
     }
   }
@@ -179,9 +179,22 @@ impl Tokens for Structure {
       }
     });
 
-    let serialize_methods = &self.serialize_methods;
+    let field_methods = &self.field_methods;
 
     let continuable = &self.serializers[1..];
+
+    let view_getters = match &self.input.fields {
+      Fields::Named(_) | Fields::Unnamed(_) => quote!(
+        impl #view {
+          #(
+          fn #field_methods(&self) -> #types {
+            self.#accessors.to_native()
+          }
+          )*
+        }
+      ),
+      Fields::Unit => quote!(),
+    };
 
     quote!(
       impl #x::X for #ident {
@@ -189,7 +202,10 @@ impl Tokens for Structure {
         type Serializer<A: #x::Allocator, C: #x::Continuation<A>> = #first_serializer<A, C>;
       }
 
+      #[repr(C)]
       struct #view #body
+
+      #view_getters
 
       impl View for #view {
         type Native = #ident;
@@ -215,7 +231,7 @@ impl Tokens for Structure {
 
       #(
       impl <A: Allocator, C: Continuation<A>> #serializers<A, C> {
-        fn #serialize_methods(self, value: #types) -> #continuations {
+        fn #field_methods(self, value: #types) -> #continuations {
           self.#serializer_methods().serialize(value)
         }
 
@@ -269,6 +285,7 @@ mod tests {
         type Serializer<A: ::x::Allocator, C: ::x::Continuation<A>> = FooSerializer<A, C>;
       }
 
+      #[repr(C)]
       struct FooView;
 
       impl View for FooView {
@@ -322,10 +339,22 @@ mod tests {
         type Serializer<A: ::x::Allocator, C: ::x::Continuation<A>> = FooSerializer<A, C>;
       }
 
+      #[repr(C)]
       struct FooView {
         a: <u16 as ::x::X>::View,
         b: <String as ::x::X>::View,
       }
+
+      impl FooView {
+        fn a(&self) -> u16 {
+          self.a.to_native()
+        }
+
+        fn b(&self) -> String {
+          self.b.to_native()
+        }
+      }
+
 
       impl View for FooView {
         type Native = Foo;
@@ -419,7 +448,18 @@ mod tests {
         type Serializer<A: ::x::Allocator, C: ::x::Continuation<A>> = FooSerializer<A, C>;
       }
 
+      #[repr(C)]
       struct FooView(<u16 as ::x::X>::View, <String as ::x::X>::View,);
+
+      impl FooView {
+        fn zero(&self) -> u16 {
+          self.0.to_native()
+        }
+
+        fn one(&self) -> String {
+          self.1.to_native()
+        }
+      }
 
       impl View for FooView {
         type Native = Foo;
