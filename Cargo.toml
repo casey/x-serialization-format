@@ -5,6 +5,10 @@ authors   = ["Casey Rodarmor <casey@rodarmor.com>"]
 edition   = "2018"
 autotests = false
 
+[features]
+default = []
+alloc = []
+
 [dependencies]
 x-derive = { path = "x-derive" }
 

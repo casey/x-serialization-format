@@ -37,3 +37,11 @@ impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for U16Serializer<A, C> 
     C::continuation(self.0)
   }
 }
+
+#[cfg(test)]
+mod tests {
+  // use super::*;
+
+  #[test]
+  fn serialize() {}
+}

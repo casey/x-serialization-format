@@ -11,11 +11,19 @@ impl<'slice> SliceAllocator<'slice> {
   }
 }
 
-impl<'a> Allocator for SliceAllocator<'a> {
+impl<'slice> Allocator for SliceAllocator<'slice> {
+  type Output = &'slice [u8];
+
   fn write(&mut self, bytes: &[u8]) {
+    // TODO: actually return an error here
+
     for (dst, src) in self.slice[self.offset..].iter_mut().zip(bytes) {
       *dst = *src;
     }
     self.offset += bytes.len();
+  }
+
+  fn finish(self) -> Self::Output {
+    &self.slice[..self.offset]
   }
 }

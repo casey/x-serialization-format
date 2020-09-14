@@ -2,7 +2,7 @@
 #![feature(generic_associated_types)]
 #![allow(incomplete_features)]
 
-use x::{Serializer, SliceAllocator, View, X};
+use x::{Serializer, View, X};
 
 #[derive(X)]
 struct Record {
@@ -20,25 +20,21 @@ struct Unit;
 
 #[test]
 fn construct() {
-  let buffer = &mut [0, 0, 0, 0, 0, 0, 0, 0];
-  let allocator = SliceAllocator::new(buffer);
+  let want = &[1, 2, 3, 4, 5, 6, 7, 8];
 
   // THE BIG PAY OFF. CHECK OUT HOW FUCKING CLEAN IT IS. ANY DEVIATION FROM
   // CANONICAL ORDERING IS SWIFTLY PUNISHED WITH BRUTAL TYPE ERRORS.
-  Record::store(allocator)
+  let have = Record::store_to_vec()
     .a(513)
     .b(1027)
     .c(Tuple(1541, 2055))
     .d(Unit)
     .done();
 
-  assert_eq!(buffer, &[1, 2, 3, 4, 5, 6, 7, 8]);
+  assert_eq!(have, want);
 
   // Alternatively:
-  let buffer = &mut [0, 0, 0, 0, 0, 0, 0, 0];
-  let allocator = SliceAllocator::new(buffer);
-
-  Record::store(allocator)
+  let have = Record::store_to_vec()
     .a(513)
     .b(1027)
     .c_serializer()
@@ -47,13 +43,10 @@ fn construct() {
     .d(Unit)
     .done();
 
-  assert_eq!(buffer, &[1, 2, 3, 4, 5, 6, 7, 8]);
+  assert_eq!(have, want);
 
   // Alternatively:
-  let buffer = &mut [0, 0, 0, 0, 0, 0, 0, 0];
-  let allocator = SliceAllocator::new(buffer);
-
-  Record::store(allocator)
+  let have = Record::store_to_vec()
     .serialize(Record {
       a: 513,
       b: 1027,
@@ -62,9 +55,9 @@ fn construct() {
     })
     .done();
 
-  assert_eq!(buffer, &[1, 2, 3, 4, 5, 6, 7, 8]);
+  assert_eq!(have, want);
 
-  let foo = unsafe { core::mem::transmute::<&[u8; 8], &RecordView>(buffer) };
+  let foo = RecordView::load(&have);
 
   assert_eq!(foo.a(), 513);
   assert_eq!(foo.b(), 1027);
