@@ -1,0 +1,89 @@
+name: Build
+
+on:
+  push:
+    branches:
+    - master
+    tags:
+    - '*'
+  pull_request:
+    branches:
+    - master
+
+jobs:
+  all:
+    name: All
+
+    strategy:
+      matrix:
+        os:
+        - macos-latest
+        - ubuntu-latest
+        - windows-latest
+
+    runs-on: ${{matrix.os}}
+
+    env:
+      RUSTFLAGS: "-D warnings"
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Cache cargo registry
+      uses: actions/cache@v1
+      with:
+        path: ~/.cargo/registry
+        key: ${{ runner.os }}-cargo-registry
+
+    - name: Cache cargo index
+      uses: actions/cache@v1
+      with:
+        path: ~/.cargo/git
+        key: ${{ runner.os }}-cargo-index
+
+    - name: Cache cargo build
+      uses: actions/cache@v1
+      with:
+        path: target
+        key: ${{ runner.os }}-cargo-build-target
+
+    - name: Install Stable
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+        target: ${{matrix.target}}
+        profile: minimal
+        components: clippy, rustfmt
+        override: true
+
+    - name: Info
+      run: |
+        rustup --version
+        cargo --version
+        cargo clippy --version
+
+    - name: Build
+      run: cargo build --all --verbose
+
+    - name: Test
+      run: cargo test --all --verbose
+
+    - name: Clippy
+      run: cargo clippy --all
+
+    - name: Lint
+      if: matrix.os == 'macos-latest'
+      run: |
+        brew install ripgrep
+        ./bin/lint
+
+    - name: Install Nightly
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: nightly
+        target: ${{matrix.target}}
+        profile: minimal
+        components: rustfmt
+
+    - name: Check Formatting
+      run: cargo +nightly fmt --all -- --check
