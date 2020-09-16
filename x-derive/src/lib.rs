@@ -19,12 +19,10 @@ fn derive_x_inner(input: TokenStream) -> Result<TokenStream, Error> {
 
   let pkg = std::env::var_os("CARGO_PKG_NAME")
     .map(|pkg| pkg.to_string_lossy().into_owned())
-    .unwrap_or(String::from(""));
+    .unwrap_or_else(String::new);
 
   let x = {
-    if pkg == "x" {
-      quote!(::x)
-    } else if pkg == "x-derive" {
+    if pkg == "x" || pkg == "x-derive" {
       quote!(::x)
     } else {
       let name = match proc_macro_crate::crate_name("x") {
