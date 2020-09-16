@@ -21,6 +21,10 @@ impl View for U16 {
   fn to_native(&self) -> Self::Native {
     u16::from_le_bytes(self.bytes)
   }
+
+  fn check<'value>(value: &'value MaybeUninit<Self>, _buffer: &[u8]) -> Result<&'value Self> {
+    Ok(unsafe { value.assume_init_ref() })
+  }
 }
 
 pub struct U16Serializer<A: Allocator, C>(A, PhantomData<C>);

@@ -1,10 +1,17 @@
-pub(crate) use core::{borrow::Borrow, marker::PhantomData};
+pub(crate) use core::{
+  borrow::Borrow,
+  marker::PhantomData,
+  mem::{self, MaybeUninit},
+};
 
 pub(crate) use crate::{
   allocator::Allocator, continuation::Continuation, serializer::Serializer, view::View, x::X,
 };
 
 pub(crate) use crate::{done::Done, slice_allocator::SliceAllocator};
+
+// type aliases
+pub(crate) use crate::Result;
 
 #[cfg(feature = "alloc")]
 mod alloc {

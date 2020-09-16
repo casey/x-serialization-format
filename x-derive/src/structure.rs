@@ -213,6 +213,23 @@ impl Tokens for Structure {
         fn to_native(&self) -> Self::Native {
           #ident #to_native_inner
         }
+
+        fn check<'value>(
+          value: &'value #x::core::mem::MaybeUninit<Self>,
+          buffer: &[u8],
+        ) -> #x::Result<&'value Self> {
+          let pointer: *const Self = value.as_ptr();
+          #(
+          {
+            type FieldView = <#types as #x::X>::View;
+            let field_pointer: *const FieldView = unsafe { &raw const (*pointer).#accessors };
+            let maybe_uninit_pointer = field_pointer as *const #x::core::mem::MaybeUninit<FieldView>;
+            let maybe_uninit_ref = unsafe { &*maybe_uninit_pointer } ;
+            FieldView::check(maybe_uninit_ref, buffer)?;
+          }
+          )*
+          Ok(unsafe { value.assume_init_ref() })
+        }
       }
 
       impl From<&#view> for #ident {
@@ -294,6 +311,14 @@ mod tests {
         fn to_native(&self) -> Self::Native {
           Foo
         }
+
+        fn check<'value>(
+          value: &'value ::x::core::mem::MaybeUninit<Self>,
+          buffer: &[u8],
+        ) -> ::x::Result<&'value Self> {
+          let pointer: *const Self = value.as_ptr();
+          Ok(unsafe { value.assume_init_ref() })
+        }
       }
 
       impl From<&FooView> for Foo {
@@ -363,6 +388,28 @@ mod tests {
             a: self.a.to_native(),
             b: self.b.to_native(),
           }
+        }
+
+        fn check<'value>(
+          value: &'value ::x::core::mem::MaybeUninit<Self>,
+          buffer: &[u8],
+        ) -> ::x::Result<&'value Self> {
+          let pointer: *const Self = value.as_ptr();
+          {
+            type FieldView = <u16 as ::x::X>::View;
+            let field_pointer: *const FieldView = unsafe { &raw const (*pointer).a };
+            let maybe_uninit_pointer = field_pointer as *const ::x::core::mem::MaybeUninit<FieldView>;
+            let maybe_uninit_ref = unsafe { &*maybe_uninit_pointer } ;
+            FieldView::check(maybe_uninit_ref, buffer)?;
+          }
+          {
+            type FieldView = <String as ::x::X>::View;
+            let field_pointer: *const FieldView = unsafe { &raw const (*pointer).b };
+            let maybe_uninit_pointer = field_pointer as *const ::x::core::mem::MaybeUninit<FieldView>;
+            let maybe_uninit_ref = unsafe { &*maybe_uninit_pointer } ;
+            FieldView::check(maybe_uninit_ref, buffer)?;
+          }
+          Ok(unsafe { value.assume_init_ref() })
         }
       }
 
@@ -465,6 +512,28 @@ mod tests {
 
         fn to_native(&self) -> Self::Native {
           Foo(self.0.to_native(), self.1.to_native(),)
+        }
+
+        fn check<'value>(
+          value: &'value ::x::core::mem::MaybeUninit<Self>,
+          buffer: &[u8],
+        ) -> ::x::Result<&'value Self> {
+          let pointer: *const Self = value.as_ptr();
+          {
+            type FieldView = <u16 as ::x::X>::View;
+            let field_pointer: *const FieldView = unsafe { &raw const (*pointer).0 };
+            let maybe_uninit_pointer = field_pointer as *const ::x::core::mem::MaybeUninit<FieldView>;
+            let maybe_uninit_ref = unsafe { &*maybe_uninit_pointer } ;
+            FieldView::check(maybe_uninit_ref, buffer)?;
+          }
+          {
+            type FieldView = <String as ::x::X>::View;
+            let field_pointer: *const FieldView = unsafe { &raw const (*pointer).1 };
+            let maybe_uninit_pointer = field_pointer as *const ::x::core::mem::MaybeUninit<FieldView>;
+            let maybe_uninit_ref = unsafe { &*maybe_uninit_pointer } ;
+            FieldView::check(maybe_uninit_ref, buffer)?;
+          }
+          Ok(unsafe { value.assume_init_ref() })
         }
       }
 

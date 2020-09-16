@@ -1,5 +1,7 @@
 #![no_std]
 #![feature(generic_associated_types)]
+#![feature(raw_ref_op)]
+#![feature(maybe_uninit_ref)]
 #![allow(incomplete_features)]
 
 use x::{Serializer, View, X};
@@ -57,7 +59,7 @@ fn construct() {
 
   assert_eq!(have, want);
 
-  let foo = RecordView::load(&have);
+  let foo = RecordView::load(&have).unwrap();
 
   assert_eq!(foo.a(), 513);
   assert_eq!(foo.b(), 1027);
