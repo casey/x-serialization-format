@@ -4,11 +4,13 @@ pub(crate) use core::{
   mem::{self, MaybeUninit},
 };
 
+// traits
 pub(crate) use crate::{
   allocator::Allocator, continuation::Continuation, serializer::Serializer, view::View, x::X,
 };
 
-pub(crate) use crate::{done::Done, slice_allocator::SliceAllocator};
+// structs and enums
+pub(crate) use crate::{done::Done, error::Error, slice_allocator::SliceAllocator};
 
 // type aliases
 pub(crate) use crate::Result;
@@ -22,3 +24,14 @@ mod alloc {
 
 #[cfg(feature = "alloc")]
 pub(crate) use self::alloc::*;
+
+#[cfg(test)]
+mod test {
+  pub(crate) use core::fmt::Debug;
+
+  #[allow(unused)]
+  pub(crate) use crate::test::{err, ok};
+}
+
+#[cfg(test)]
+pub(crate) use self::test::*;

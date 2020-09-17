@@ -228,6 +228,7 @@ impl Tokens for Structure {
             FieldView::check(maybe_uninit_ref, buffer)?;
           }
           )*
+          // All fields are valid, so the struct is valid.
           Ok(unsafe { value.assume_init_ref() })
         }
       }

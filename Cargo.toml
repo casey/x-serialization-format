@@ -11,6 +11,7 @@ alloc = []
 
 [dependencies]
 x-derive = { path = "x-derive" }
+static_assertions = "1.1.0"
 
 [workspace]
 members = [

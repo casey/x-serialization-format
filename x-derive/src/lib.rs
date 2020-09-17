@@ -19,7 +19,7 @@ fn derive_x_inner(input: TokenStream) -> Result<TokenStream, Error> {
 
   let pkg = std::env::var_os("CARGO_PKG_NAME")
     .map(|pkg| pkg.to_string_lossy().into_owned())
-    .unwrap_or_else(String::new);
+    .unwrap_or_default();
 
   let x = {
     if pkg == "x" || pkg == "x-derive" {
