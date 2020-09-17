@@ -40,9 +40,12 @@ mod common;
 mod continuation;
 mod done;
 mod error;
+mod i8;
 mod integer;
 mod serializer;
 mod slice_allocator;
+mod u8;
+mod unit;
 mod view;
 mod x;
 

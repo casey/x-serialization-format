@@ -66,10 +66,6 @@ integer! { native: i128, view: I128, serializer: I128Serializer }
 mod tests {
   use super::*;
 
-  // TODO:
-  // - check that deserialization fails when buffer is wrong size
-  // - and returns wrong error
-
   #[test]
   #[rustfmt::skip]
   fn success() {
