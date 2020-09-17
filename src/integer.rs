@@ -12,7 +12,7 @@ macro_rules! integer {
       le_bytes: [u8; mem::size_of::<$native>()],
     }
 
-    pub struct $serializer<A: Allocator, C> {
+    pub struct $serializer<A: Allocator, C: Continuation<A>> {
       allocator: A,
       continuation: PhantomData<C>,
     }

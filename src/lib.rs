@@ -5,6 +5,7 @@
 #![feature(min_const_generics)]
 #![feature(raw_ref_op)]
 #![feature(maybe_uninit_ref)]
+#![feature(associated_type_defaults)]
 #![allow(incomplete_features)]
 
 // traits
@@ -36,6 +37,7 @@ pub use core;
 pub type Result<T, E = Error> = core::result::Result<T, E>;
 
 mod allocator;
+mod array;
 mod common;
 mod continuation;
 mod done;
@@ -44,6 +46,7 @@ mod i8;
 mod integer;
 mod serializer;
 mod slice_allocator;
+mod state;
 mod u8;
 mod unit;
 mod view;

@@ -1,6 +1,6 @@
 use crate::common::*;
 
-pub struct I8Serializer<A: Allocator, C> {
+pub struct I8Serializer<A: Allocator, C: Continuation<A>> {
   allocator:    A,
   continuation: PhantomData<C>,
 }
