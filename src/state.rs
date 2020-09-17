@@ -1,13 +1,13 @@
 use crate::common::*;
 
 pub struct State<A: Allocator, C: Continuation<A>> {
-  allocator:    A,
-  state:        C::State,
-  continuation: PhantomData<C>,
+  pub(crate) allocator: A,
+  pub(crate) state:     C::State,
+  continuation:         PhantomData<C>,
 }
 
 impl<A: Allocator, C: Continuation<A>> State<A, C> {
-  pub(crate) fn new(allocator: A, state: C::State) -> Self {
+  pub fn new(allocator: A, state: C::State) -> Self {
     Self {
       continuation: PhantomData,
       allocator,
@@ -15,7 +15,37 @@ impl<A: Allocator, C: Continuation<A>> State<A, C> {
     }
   }
 
-  pub(crate) fn continuation(self) -> C {
+  pub fn continuation(self) -> C {
     C::continuation(self.allocator, self.state)
+  }
+
+  pub fn decompose(self) -> (A, C::State) {
+    (self.allocator, self.state)
+  }
+
+  pub(crate) fn allocator(&mut self) -> &mut A {
+    &mut self.allocator
+  }
+
+  pub fn transform<N: Continuation<A>>(self) -> State<A, N>
+  where
+    C::State: Is<Type = N::State>,
+  {
+    State::new(self.allocator, self.state.into_val())
+  }
+}
+
+// all credit to: https://github.com/clintonmead/is_type
+pub trait Is {
+  type Type: ?Sized;
+
+  fn into_val(self) -> Self::Type;
+}
+
+impl<T> Is for T {
+  type Type = T;
+
+  fn into_val(self) -> Self::Type {
+    self
   }
 }

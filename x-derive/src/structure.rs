@@ -157,7 +157,7 @@ impl Tokens for Structure {
     let serializer_methods = self.serializer_methods();
 
     let serialize_inner = if self.field_count() == 0 {
-      quote!(C::continuation(self.allocator))
+      quote!(self.state.continuation())
     } else {
       quote!(
         let native = native.borrow();
@@ -241,9 +241,7 @@ impl Tokens for Structure {
 
       #(
       struct #serializers<A: #x::Allocator, C: #x::Continuation<A>> {
-        allocator: A,
-        #[allow(unused)]
-        continuation: #x::core::marker::PhantomData<C>,
+        state: #x::State<A, C>,
       }
       )*
 
@@ -254,7 +252,7 @@ impl Tokens for Structure {
         }
 
         fn #serializer_methods(self) -> <#types as #x::X>::Serializer<A, #continuations> {
-          <#types as #x::X>::Serializer::new(self.allocator)
+          <#types as #x::X>::Serializer::new(self.state.transform())
         }
       }
       )*
@@ -262,11 +260,8 @@ impl Tokens for Structure {
       impl<A: #x::Allocator, C: #x::Continuation<A>> #x::Serializer<A, C> for #first_serializer<A, C> {
         type Native = #ident;
 
-        fn new(allocator: A) -> Self {
-          Self {
-            continuation: #x::core::marker::PhantomData,
-            allocator,
-          }
+        fn new(state: #x::State<A, C>) -> Self {
+          Self { state }
         }
 
         fn serialize<B: #x::core::borrow::Borrow<Self::Native>>(self, native: B) -> C {
@@ -276,11 +271,10 @@ impl Tokens for Structure {
 
       #(
       impl<A: #x::Allocator, C: #x::Continuation<A>> #x::Continuation<A> for #continuable<A, C> {
-        fn continuation(allocator: A) -> Self {
-          #continuable {
-            continuation: #x::core::marker::PhantomData,
-            allocator,
-          }
+        type State = C::State;
+
+        fn continuation(allocator: A, state: Self::State) -> Self {
+          #continuable { state: #x::State::new(allocator, state) }
         }
       }
       )*

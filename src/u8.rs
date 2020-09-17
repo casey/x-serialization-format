@@ -1,8 +1,7 @@
 use crate::common::*;
 
 pub struct U8Serializer<A: Allocator, C: Continuation<A>> {
-  allocator:    A,
-  continuation: PhantomData<C>,
+  state: State<A, C>,
 }
 
 impl X for u8 {
@@ -27,16 +26,13 @@ impl View for u8 {
 impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for U8Serializer<A, C> {
   type Native = u8;
 
-  fn new(allocator: A) -> Self {
-    U8Serializer {
-      continuation: PhantomData,
-      allocator,
-    }
+  fn new(state: State<A, C>) -> Self {
+    U8Serializer { state }
   }
 
   fn serialize<B: Borrow<Self::Native>>(mut self, native: B) -> C {
-    self.allocator.write(&native.borrow().to_le_bytes());
-    C::continuation(self.allocator)
+    self.state.allocator().write(&native.borrow().to_le_bytes());
+    self.state.continuation()
   }
 }
 
