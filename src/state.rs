@@ -32,6 +32,11 @@ impl<A: Allocator, C: Continuation<A>> State<A, C> {
   /// Only implemented if the type of the current continuation's state,
   /// C::State, is that same as that of the destination continuation's state,
   /// D::State.
+  ///
+  /// This is useful when state for a sub-object is needed, and the parent
+  /// object has no state of its own. This occurs when serializing composite
+  /// types where all state is lifted into the type system, and thus no run-time
+  /// state exists.
   pub fn transform<D: Continuation<A>>(self) -> State<A, D>
   where
     C::State: Is<Type = D::State>,

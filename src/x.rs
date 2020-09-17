@@ -7,6 +7,7 @@ pub trait X {
   type Serializer<A: Allocator, C: Continuation<A>>: Serializer<A, C, Native = Self>;
 
   fn store<A: Allocator>(allocator: A) -> Self::Serializer<A, Done<A>> {
+    // The `()` passed to `State::new` is the state of the `Done` continuation.
     Self::Serializer::new(State::new(allocator, ()))
   }
 
