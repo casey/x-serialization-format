@@ -27,9 +27,14 @@ impl<A: Allocator, C: Continuation<A>> State<A, C> {
     &mut self.allocator
   }
 
-  pub fn transform<N: Continuation<A>>(self) -> State<A, N>
+  /// Transform this state into the state for another continuation.
+  ///
+  /// Only implemented if the type of the current continuation's state,
+  /// C::State, is that same as that of the destination continuation's state,
+  /// D::State.
+  pub fn transform<D: Continuation<A>>(self) -> State<A, D>
   where
-    C::State: Is<Type = N::State>,
+    C::State: Is<Type = D::State>,
   {
     State::new(self.allocator, self.state.into_val())
   }

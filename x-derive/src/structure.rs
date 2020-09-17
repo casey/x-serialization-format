@@ -323,23 +323,18 @@ mod tests {
       }
 
       struct FooSerializer<A: ::x::Allocator, C: ::x::Continuation<A>> {
-        allocator: A,
-        #[allow(unused)]
-        continuation: ::x::core::marker::PhantomData<C>,
+        state: ::x::State<A, C>,
       }
 
       impl<A: ::x::Allocator, C: ::x::Continuation<A>> ::x::Serializer<A, C> for FooSerializer<A, C> {
         type Native = Foo;
 
-        fn new(allocator: A) -> Self {
-          Self {
-            continuation: ::x::core::marker::PhantomData,
-            allocator,
-          }
+        fn new(state: ::x::State<A, C>) -> Self {
+          Self { state }
         }
 
         fn serialize<B: ::x::core::borrow::Borrow<Self::Native>>(self, native: B) -> C {
-          C::continuation(self.allocator)
+          self.state.continuation()
         }
       }
     );
@@ -415,15 +410,11 @@ mod tests {
       }
 
       struct FooSerializer<A: ::x::Allocator, C: ::x::Continuation<A>> {
-        allocator: A,
-        #[allow(unused)]
-        continuation: ::x::core::marker::PhantomData<C>,
+        state: ::x::State<A, C>,
       }
 
       struct FooSerializerB<A: ::x::Allocator, C: ::x::Continuation<A>> {
-        allocator: A,
-        #[allow(unused)]
-        continuation: ::x::core::marker::PhantomData<C>,
+        state: ::x::State<A, C>,
       }
 
       impl<A: ::x::Allocator, C: ::x::Continuation<A>> FooSerializer<A, C> {
@@ -432,7 +423,7 @@ mod tests {
         }
 
         fn a_serializer(self) -> <u16 as ::x::X>::Serializer<A, FooSerializerB<A, C> > {
-          <u16 as ::x::X>::Serializer::new(self.allocator)
+          <u16 as ::x::X>::Serializer::new(self.state.transform())
         }
       }
 
@@ -442,18 +433,15 @@ mod tests {
         }
 
         fn b_serializer(self) -> <String as ::x::X>::Serializer<A, C> {
-          <String as ::x::X>::Serializer::new(self.allocator)
+          <String as ::x::X>::Serializer::new(self.state.transform())
         }
       }
 
       impl<A: ::x::Allocator, C: ::x::Continuation<A>> ::x::Serializer<A, C> for FooSerializer<A, C> {
         type Native = Foo;
 
-        fn new(allocator: A) -> Self {
-          Self {
-            continuation: ::x::core::marker::PhantomData,
-            allocator,
-          }
+        fn new(state: ::x::State<A, C>) -> Self {
+          Self { state }
         }
 
         fn serialize<B: ::x::core::borrow::Borrow<Self::Native>>(self, native: B) -> C {
@@ -468,11 +456,10 @@ mod tests {
       }
 
       impl<A: ::x::Allocator, C: ::x::Continuation<A>> ::x::Continuation<A> for FooSerializerB<A, C> {
-        fn continuation(allocator: A) -> Self {
-          FooSerializerB {
-            continuation: ::x::core::marker::PhantomData,
-            allocator,
-          }
+        type State = C::State;
+
+        fn continuation(allocator: A, state: Self::State) -> Self {
+          FooSerializerB { state: ::x::State::new(allocator, state) }
         }
       }
     );
@@ -539,15 +526,11 @@ mod tests {
       }
 
       struct FooSerializer<A: ::x::Allocator, C: ::x::Continuation<A>> {
-        allocator: A,
-        #[allow(unused)]
-        continuation: ::x::core::marker::PhantomData<C>,
+        state: ::x::State<A, C>,
       }
 
       struct FooSerializerOne<A: ::x::Allocator, C: ::x::Continuation<A>> {
-        allocator: A,
-        #[allow(unused)]
-        continuation: ::x::core::marker::PhantomData<C>,
+        state: ::x::State<A, C>,
       }
 
       impl<A: ::x::Allocator, C: ::x::Continuation<A>> FooSerializer<A, C> {
@@ -556,7 +539,7 @@ mod tests {
         }
 
         fn zero_serializer(self) -> <u16 as ::x::X>::Serializer<A, FooSerializerOne<A, C> > {
-          <u16 as ::x::X>::Serializer::new(self.allocator)
+          <u16 as ::x::X>::Serializer::new(self.state.transform())
         }
       }
 
@@ -566,18 +549,15 @@ mod tests {
         }
 
         fn one_serializer(self) -> <String as ::x::X>::Serializer<A, C> {
-          <String as ::x::X>::Serializer::new(self.allocator)
+          <String as ::x::X>::Serializer::new(self.state.transform())
         }
       }
 
       impl<A: ::x::Allocator, C: ::x::Continuation<A>> ::x::Serializer<A, C> for FooSerializer<A, C> {
         type Native = Foo;
 
-        fn new(allocator: A) -> Self {
-          Self {
-            continuation: ::x::core::marker::PhantomData,
-            allocator,
-          }
+        fn new(state: ::x::State<A, C>) -> Self {
+          Self { state }
         }
 
         fn serialize<B: ::x::core::borrow::Borrow<Self::Native>>(self, native: B) -> C {
@@ -592,11 +572,10 @@ mod tests {
       }
 
       impl<A: ::x::Allocator, C: ::x::Continuation<A>> ::x::Continuation<A> for FooSerializerOne<A, C> {
-        fn continuation(allocator: A) -> Self {
-          FooSerializerOne {
-            continuation: ::x::core::marker::PhantomData,
-            allocator,
-          }
+        type State = C::State;
+
+        fn continuation(allocator: A, state: Self::State) -> Self {
+          FooSerializerOne { state: ::x::State::new(allocator, state) }
         }
       }
     );
