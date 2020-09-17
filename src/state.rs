@@ -1,13 +1,13 @@
 use crate::common::*;
 
-struct State<A: Allocator, C: StatefulContinuation<A>> {
+pub struct State<A: Allocator, C: Continuation<A>> {
   allocator:    A,
   state:        C::State,
   continuation: PhantomData<C>,
 }
 
-impl<A: Allocator, C: StatefulContinuation<A>> State<A, C> {
-  fn new(allocator: A, state: C::State) -> Self {
+impl<A: Allocator, C: Continuation<A>> State<A, C> {
+  pub(crate) fn new(allocator: A, state: C::State) -> Self {
     Self {
       continuation: PhantomData,
       allocator,
@@ -15,7 +15,7 @@ impl<A: Allocator, C: StatefulContinuation<A>> State<A, C> {
     }
   }
 
-  fn continuation(self) -> C {
+  pub(crate) fn continuation(self) -> C {
     C::continuation(self.allocator, self.state)
   }
 }

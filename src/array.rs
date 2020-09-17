@@ -47,13 +47,3 @@ impl<A: Allocator, C: Continuation<A>, E: X, const SIZE: usize> Serializer<A, C>
 impl<A: Allocator, C: Continuation<A>, E: X, const SIZE: usize> ArraySerializer<A, C, E, SIZE> {
   fn element_serializer() {}
 }
-
-mod foo {
-  use crate::common::*;
-
-  pub trait StatefulContinuation<A: Allocator> {
-    type State = ();
-
-    fn continuation(allocator: A, state: Self::State) -> Self;
-  }
-}

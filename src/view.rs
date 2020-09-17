@@ -74,7 +74,7 @@ mod tests {
     impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for Foo {
       type Native = Foo;
 
-      fn new(_: A) -> Self {
+      fn new(_: State<A, C>) -> Self {
         panic!()
       }
 

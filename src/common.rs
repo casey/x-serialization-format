@@ -10,7 +10,7 @@ pub(crate) use crate::{
 };
 
 // structs and enums
-pub(crate) use crate::{done::Done, error::Error, slice_allocator::SliceAllocator};
+pub(crate) use crate::{done::Done, error::Error, slice_allocator::SliceAllocator, state::State};
 
 // type aliases
 pub(crate) use crate::Result;

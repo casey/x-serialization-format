@@ -1,8 +1,7 @@
 use crate::common::*;
 
-pub struct UnitSerializer<A: Allocator, C> {
-  allocator:    A,
-  continuation: PhantomData<C>,
+pub struct UnitSerializer<A: Allocator, C: Continuation<A>> {
+  state: State<A, C>,
 }
 
 impl X for () {
@@ -25,15 +24,12 @@ impl View for () {
 impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for UnitSerializer<A, C> {
   type Native = ();
 
-  fn new(allocator: A) -> Self {
-    UnitSerializer {
-      continuation: PhantomData,
-      allocator,
-    }
+  fn new(state: State<A, C>) -> Self {
+    UnitSerializer { state }
   }
 
   fn serialize<B: Borrow<Self::Native>>(self, _native: B) -> C {
-    C::continuation(self.allocator)
+    self.state.continuation()
   }
 }
 

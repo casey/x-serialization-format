@@ -13,8 +13,7 @@ macro_rules! integer {
     }
 
     pub struct $serializer<A: Allocator, C: Continuation<A>> {
-      allocator: A,
-      continuation: PhantomData<C>,
+      state: State<A, C>
     }
 
     impl X for $native {
