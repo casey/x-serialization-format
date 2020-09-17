@@ -38,6 +38,7 @@ pub type Result<T, E = Error> = core::result::Result<T, E>;
 
 mod allocator;
 mod array;
+mod bool;
 mod common;
 mod continuation;
 mod done;

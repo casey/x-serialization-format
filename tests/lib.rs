@@ -13,6 +13,7 @@ struct Record {
   c: Tuple,
   d: Unit,
   e: i32,
+  f: bool,
 }
 
 #[derive(X, PartialEq, Debug)]
@@ -23,7 +24,7 @@ struct Unit;
 
 #[test]
 fn construct() {
-  let want = &[1, 2, 3, 4, 5, 6, 7, 8, 0xFE, 0xFF, 0xFF, 0xFF];
+  let want = &[1, 2, 3, 4, 5, 6, 7, 8, 0xFE, 0xFF, 0xFF, 0xFF, 0x01];
 
   // THE BIG PAY OFF. CHECK OUT HOW FUCKING CLEAN IT IS. ANY DEVIATION FROM
   // CANONICAL ORDERING IS SWIFTLY PUNISHED WITH BRUTAL TYPE ERRORS.
@@ -33,6 +34,7 @@ fn construct() {
     .c(Tuple(1541, 2055))
     .d(Unit)
     .e(-2)
+    .f(true)
     .done();
 
   assert_eq!(have, want);
@@ -46,6 +48,7 @@ fn construct() {
     .one(2055)
     .d(Unit)
     .e(-2)
+    .f(true)
     .done();
 
   assert_eq!(have, want);
@@ -58,6 +61,7 @@ fn construct() {
       c: Tuple(1541, 2055),
       d: Unit,
       e: -2,
+      f: true,
     })
     .done();
 
@@ -72,4 +76,5 @@ fn construct() {
   assert_eq!(foo.c(), Tuple(1541, 2055));
   assert_eq!(foo.d(), Unit);
   assert_eq!(foo.e(), -2);
+  assert_eq!(foo.f(), true);
 }
