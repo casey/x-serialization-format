@@ -29,7 +29,7 @@ macro_rules! integer {
       }
 
       fn check<'value>(suspect: &'value MaybeUninit<Self>, _buffer: &[u8]) -> Result<&'value Self> {
-        // This is safe because all bitpatterns of the correct size are valid values of type Self.
+        // All bit patterns of the correct size are valid values of type Self.
         Ok(unsafe { suspect.assume_init_ref() })
       }
     }

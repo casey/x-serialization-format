@@ -26,7 +26,7 @@ impl View for bool {
     // from a valid reference.
     let value = unsafe { *pointer };
 
-    if value != bool_bitpattern(true) && value != bool_bitpattern(false) {
+    if value != bool_bit_pattern(true) && value != bool_bit_pattern(false) {
       return Err(Error::Bool { value });
     }
 
@@ -47,14 +47,14 @@ impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for BoolSerializer<A, C>
     let native: bool = *native.borrow();
     // todo: document
     let value = if native { true } else { false };
-    let byte = unsafe { mem::transmute::<bool, u8>(value) };
+    let byte = bool_bitpatteren(value);
     self.state.write(&[byte]);
     self.state.continuation()
   }
 }
 
-fn bool_bitpattern(value: bool) -> u8 {
-  // This is safe because all bitpatterns are valid u8 values
+fn bool_bit_pattern(value: bool) -> u8 {
+  // This is safe because all bit patterns are valid u8 values
   unsafe { mem::transmute::<bool, u8>(value) }
 }
 
