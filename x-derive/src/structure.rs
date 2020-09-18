@@ -215,10 +215,10 @@ impl Tokens for Structure {
         }
 
         fn check<'value>(
-          value: &'value #x::core::mem::MaybeUninit<Self>,
+          suspect: &'value #x::core::mem::MaybeUninit<Self>,
           buffer: &[u8],
         ) -> #x::Result<&'value Self> {
-          let pointer: *const Self = value.as_ptr();
+          let pointer: *const Self = suspect.as_ptr();
           #(
           {
             type FieldView = <#types as #x::X>::View;
@@ -229,7 +229,7 @@ impl Tokens for Structure {
           }
           )*
           // All fields are valid, so the struct is valid.
-          Ok(unsafe { value.assume_init_ref() })
+          Ok(unsafe { suspect.assume_init_ref() })
         }
       }
 
@@ -271,10 +271,10 @@ impl Tokens for Structure {
 
       #(
       impl<A: #x::Allocator, C: #x::Continuation<A>> #x::Continuation<A> for #continuable<A, C> {
-        type State = C::State;
+        type Seed = C::Seed;
 
-        fn continuation(allocator: A, state: Self::State) -> Self {
-          #continuable { state: #x::State::new(allocator, state) }
+        fn continuation(allocator: A, seed: Self::Seed) -> Self {
+          #continuable { state: #x::State::new(allocator, seed) }
         }
       }
       )*
@@ -308,11 +308,11 @@ mod tests {
         }
 
         fn check<'value>(
-          value: &'value ::x::core::mem::MaybeUninit<Self>,
+          suspect: &'value ::x::core::mem::MaybeUninit<Self>,
           buffer: &[u8],
         ) -> ::x::Result<&'value Self> {
-          let pointer: *const Self = value.as_ptr();
-          Ok(unsafe { value.assume_init_ref() })
+          let pointer: *const Self = suspect.as_ptr();
+          Ok(unsafe { suspect.assume_init_ref() })
         }
       }
 
@@ -381,10 +381,10 @@ mod tests {
         }
 
         fn check<'value>(
-          value: &'value ::x::core::mem::MaybeUninit<Self>,
+          suspect: &'value ::x::core::mem::MaybeUninit<Self>,
           buffer: &[u8],
         ) -> ::x::Result<&'value Self> {
-          let pointer: *const Self = value.as_ptr();
+          let pointer: *const Self = suspect.as_ptr();
           {
             type FieldView = <u16 as ::x::X>::View;
             let field_pointer: *const FieldView = unsafe { &raw const (*pointer).a };
@@ -399,7 +399,7 @@ mod tests {
             let maybe_uninit_ref = unsafe { &*maybe_uninit_pointer } ;
             FieldView::check(maybe_uninit_ref, buffer)?;
           }
-          Ok(unsafe { value.assume_init_ref() })
+          Ok(unsafe { suspect.assume_init_ref() })
         }
       }
 
@@ -456,10 +456,10 @@ mod tests {
       }
 
       impl<A: ::x::Allocator, C: ::x::Continuation<A>> ::x::Continuation<A> for FooSerializerB<A, C> {
-        type State = C::State;
+        type Seed = C::Seed;
 
-        fn continuation(allocator: A, state: Self::State) -> Self {
-          FooSerializerB { state: ::x::State::new(allocator, state) }
+        fn continuation(allocator: A, seed: Self::Seed) -> Self {
+          FooSerializerB { state: ::x::State::new(allocator, seed) }
         }
       }
     );
@@ -497,10 +497,10 @@ mod tests {
         }
 
         fn check<'value>(
-          value: &'value ::x::core::mem::MaybeUninit<Self>,
+          suspect: &'value ::x::core::mem::MaybeUninit<Self>,
           buffer: &[u8],
         ) -> ::x::Result<&'value Self> {
-          let pointer: *const Self = value.as_ptr();
+          let pointer: *const Self = suspect.as_ptr();
           {
             type FieldView = <u16 as ::x::X>::View;
             let field_pointer: *const FieldView = unsafe { &raw const (*pointer).0 };
@@ -515,7 +515,7 @@ mod tests {
             let maybe_uninit_ref = unsafe { &*maybe_uninit_pointer } ;
             FieldView::check(maybe_uninit_ref, buffer)?;
           }
-          Ok(unsafe { value.assume_init_ref() })
+          Ok(unsafe { suspect.assume_init_ref() })
         }
       }
 
@@ -572,10 +572,10 @@ mod tests {
       }
 
       impl<A: ::x::Allocator, C: ::x::Continuation<A>> ::x::Continuation<A> for FooSerializerOne<A, C> {
-        type State = C::State;
+        type Seed = C::Seed;
 
-        fn continuation(allocator: A, state: Self::State) -> Self {
-          FooSerializerOne { state: ::x::State::new(allocator, state) }
+        fn continuation(allocator: A, seed: Self::Seed) -> Self {
+          FooSerializerOne { state: ::x::State::new(allocator, seed) }
         }
       }
     );

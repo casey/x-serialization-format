@@ -41,7 +41,7 @@ pub trait View: Sized {
     Ok(unsafe { &*pointer })
   }
 
-  fn check<'value>(value: &'value MaybeUninit<Self>, buffer: &[u8]) -> Result<&'value Self>;
+  fn check<'value>(suspect: &'value MaybeUninit<Self>, buffer: &[u8]) -> Result<&'value Self>;
 }
 
 #[cfg(test)]

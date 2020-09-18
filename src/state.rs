@@ -1,30 +1,30 @@
 use crate::common::*;
 
 pub struct State<A: Allocator, C: Continuation<A>> {
-  pub(crate) allocator: A,
-  pub(crate) state:     C::State,
-  continuation:         PhantomData<C>,
+  allocator:    A,
+  seed:         C::Seed,
+  continuation: PhantomData<C>,
 }
 
 impl<A: Allocator, C: Continuation<A>> State<A, C> {
-  pub fn new(allocator: A, state: C::State) -> Self {
+  pub fn new(allocator: A, seed: C::Seed) -> Self {
     Self {
       continuation: PhantomData,
       allocator,
-      state,
+      seed,
     }
   }
 
   pub fn continuation(self) -> C {
-    C::continuation(self.allocator, self.state)
+    C::continuation(self.allocator, self.seed)
   }
 
-  pub fn decompose(self) -> (A, C::State) {
-    (self.allocator, self.state)
+  pub fn decompose(self) -> (A, C::Seed) {
+    (self.allocator, self.seed)
   }
 
-  pub(crate) fn allocator(&mut self) -> &mut A {
-    &mut self.allocator
+  pub(crate) fn write(&mut self, bytes: &[u8]) {
+    self.allocator.write(bytes);
   }
 
   /// Transform this state into the state for another continuation.
@@ -39,23 +39,8 @@ impl<A: Allocator, C: Continuation<A>> State<A, C> {
   /// state exists.
   pub fn transform<D: Continuation<A>>(self) -> State<A, D>
   where
-    C::State: Is<Type = D::State>,
+    C::Seed: Is<Type = D::Seed>,
   {
-    State::new(self.allocator, self.state.into_val())
-  }
-}
-
-// all credit to: https://github.com/clintonmead/is_type
-pub trait Is {
-  type Type: ?Sized;
-
-  fn into_val(self) -> Self::Type;
-}
-
-impl<T> Is for T {
-  type Type = T;
-
-  fn into_val(self) -> Self::Type {
-    self
+    State::new(self.allocator, self.seed.identity())
   }
 }

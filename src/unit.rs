@@ -16,7 +16,7 @@ impl View for () {
     ()
   }
 
-  fn check<'value>(_value: &'value MaybeUninit<Self>, _buffer: &[u8]) -> Result<&'value Self> {
+  fn check<'value>(_suspect: &'value MaybeUninit<Self>, _buffer: &[u8]) -> Result<&'value Self> {
     Ok(&())
   }
 }

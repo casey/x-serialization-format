@@ -18,9 +18,9 @@ impl<E: View, const SIZE: usize> View for [E; SIZE] {
     todo!()
   }
 
-  fn check<'value>(value: &'value MaybeUninit<Self>, _buffer: &[u8]) -> Result<&'value Self> {
+  fn check<'value>(suspect: &'value MaybeUninit<Self>, _buffer: &[u8]) -> Result<&'value Self> {
     // TODO: Actuall implement this!
-    Ok(unsafe { value.assume_init_ref() })
+    Ok(unsafe { suspect.assume_init_ref() })
   }
 }
 
@@ -53,11 +53,11 @@ impl<A: Allocator, C: Continuation<A>, E: X, const SIZE: usize> ArraySerializer<
       todo!()
     }
 
-    let (allocator, continuation_state) = self.state.decompose();
+    let (allocator, seed) = self.state.decompose();
 
-    let array_state = ArrayState {
+    let array_state = ArraySeed {
       serialized: self.serialized + 1,
-      continuation_state,
+      seed,
     };
 
     let state = State::new(allocator, array_state);
@@ -81,20 +81,20 @@ impl<A: Allocator, C: Continuation<A>, E: X, const SIZE: usize> ArraySerializer<
 impl<A: Allocator, C: Continuation<A>, E: X, const SIZE: usize> Continuation<A>
   for ArraySerializer<A, C, E, SIZE>
 {
-  type State = ArrayState<A, C>;
+  type Seed = ArraySeed<A, C>;
 
-  fn continuation(allocator: A, state: Self::State) -> Self {
+  fn continuation(allocator: A, state: Self::Seed) -> Self {
     ArraySerializer {
       element:    PhantomData,
       serialized: state.serialized,
-      state:      State::new(allocator, state.continuation_state),
+      state:      State::new(allocator, state.seed),
     }
   }
 }
 
-pub struct ArrayState<A: Allocator, C: Continuation<A>> {
-  serialized:         usize,
-  continuation_state: C::State,
+pub struct ArraySeed<A: Allocator, C: Continuation<A>> {
+  serialized: usize,
+  seed:       C::Seed,
 }
 
 #[cfg(test)]
@@ -108,5 +108,11 @@ mod tests {
     let have = Native::store_to_vec().element(0).element(1).done().done();
 
     assert_eq!(have, &[0, 1]);
+  }
+
+  #[test]
+  #[ignore]
+  fn error() {
+    todo!()
   }
 }

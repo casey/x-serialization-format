@@ -33,6 +33,11 @@ pub use crate::vec_allocator::VecAllocator;
 /// This export is used by `x-derive` to access `core`
 pub use core;
 
+#[doc(hidden)]
+/// This is exported for use in macros in the `derive-x` crate, and is thus not
+/// subject to semver compatibility, and may be removed or changed at any time.
+pub use is::Is;
+
 // Result type alias with E defaulting to this crates Error type.
 pub type Result<T, E = Error> = core::result::Result<T, E>;
 
@@ -45,8 +50,10 @@ mod done;
 mod error;
 mod i8;
 mod integer;
+mod is;
 mod serializer;
 mod slice_allocator;
+mod stack;
 mod state;
 mod u8;
 mod unit;

@@ -1,7 +1,7 @@
 use crate::common::*;
 
 pub trait Continuation<A: Allocator> {
-  type State;
+  type Seed;
 
-  fn continuation(allocator: A, state: Self::State) -> Self;
+  fn continuation(allocator: A, seed: Self::Seed) -> Self;
 }

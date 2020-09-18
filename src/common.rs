@@ -6,7 +6,8 @@ pub(crate) use core::{
 
 // traits
 pub(crate) use crate::{
-  allocator::Allocator, continuation::Continuation, serializer::Serializer, view::View, x::X,
+  allocator::Allocator, continuation::Continuation, is::Is, serializer::Serializer, view::View,
+  x::X,
 };
 
 // structs and enums

@@ -14,6 +14,7 @@ struct Record {
   d: Unit,
   e: i32,
   f: bool,
+  g: u8,
 }
 
 #[derive(X, PartialEq, Debug)]
@@ -24,7 +25,7 @@ struct Unit;
 
 #[test]
 fn construct() {
-  let want = &[1, 2, 3, 4, 5, 6, 7, 8, 0xFE, 0xFF, 0xFF, 0xFF, 0x01];
+  let want = &[1, 2, 3, 4, 5, 6, 7, 8, 0xFE, 0xFF, 0xFF, 0xFF, 0x01, 0x7F];
 
   // THE BIG PAY OFF. CHECK OUT HOW FUCKING CLEAN IT IS. ANY DEVIATION FROM
   // CANONICAL ORDERING IS SWIFTLY PUNISHED WITH BRUTAL TYPE ERRORS.
@@ -35,6 +36,7 @@ fn construct() {
     .d(Unit)
     .e(-2)
     .f(true)
+    .g(127)
     .done();
 
   assert_eq!(have, want);
@@ -49,6 +51,7 @@ fn construct() {
     .d(Unit)
     .e(-2)
     .f(true)
+    .g(127)
     .done();
 
   assert_eq!(have, want);
@@ -62,6 +65,7 @@ fn construct() {
       d: Unit,
       e: -2,
       f: true,
+      g: 127,
     })
     .done();
 
@@ -77,4 +81,7 @@ fn construct() {
   assert_eq!(foo.d(), Unit);
   assert_eq!(foo.e(), -2);
   assert_eq!(foo.f(), true);
+  assert_eq!(foo.f, true);
+  assert_eq!(foo.g(), 127);
+  assert_eq!(foo.g, 127);
 }

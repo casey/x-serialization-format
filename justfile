@@ -12,7 +12,7 @@ export RUST_LOG := log
 
 # watch filesystem for changes and rerun tests
 watch +ARGS='':
-	cargo watch --clear --exec 'test --all {{ARGS}}'
+	cargo +nightly watch --clear --exec 'test --all {{ARGS}}'
 
 push:
 	! git branch | grep '* master'
@@ -27,10 +27,10 @@ done BRANCH=`git rev-parse --abbrev-ref HEAD`:
 	git branch -D {{BRANCH}}
 
 test:
-	cargo test --all
+	cargo +nightly test --all
 
 clippy:
-	cargo clippy --all
+	cargo +nightly clippy --all
 
 fmt:
 	cargo +nightly fmt --all
@@ -65,7 +65,7 @@ merge BRANCH=`git rev-parse --abbrev-ref HEAD`:
 	just done {{BRANCH}}
 
 publish-check: check
-	cargo outdated --exit-code 1
+	cargo +nightly outdated --exit-code 1
 
 publish: publish-check
 	#!/usr/bin/env bash
@@ -75,7 +75,7 @@ publish: publish-check
 	done
 	git tag -a {{version}} -m 'Release {{version}}'
 	git push github {{version}}
-	cargo publish
+	cargo +nightly publish
 	just merge
 
 preview-readme:

@@ -16,9 +16,9 @@ impl<A: Allocator> Done<A> {
 }
 
 impl<A: Allocator> Continuation<A> for Done<A> {
-  type State = ();
+  type Seed = ();
 
-  fn continuation(allocator: A, _state: Self::State) -> Self {
+  fn continuation(allocator: A, _seed: Self::Seed) -> Self {
     Self { allocator }
   }
 }
