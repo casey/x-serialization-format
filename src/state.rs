@@ -21,15 +21,18 @@ impl<A: Allocator, C: Continuation<A>> State<A, C> {
   }
 
   pub fn continuation(self) -> C {
-    C::continuation(self.allocator, self.seed)
+    C::continuation(self)
   }
 
-  pub fn wrap<D: Continuation<A>, W: Fn(C::Seed) -> D::Seed>(self, wrapper: W) -> State<A, D> {
+  pub fn transform<D: Continuation<A>, W: Fn(C::Seed) -> D::Seed>(
+    self,
+    transformer: W,
+  ) -> State<A, D> {
     State {
       allocator:    self.allocator,
       end:          self.end,
       stack:        self.stack,
-      seed:         wrapper(self.seed),
+      seed:         transformer(self.seed),
       continuation: PhantomData,
     }
   }
@@ -44,8 +47,21 @@ impl<A: Allocator, C: Continuation<A>> State<A, C> {
   }
 
   pub(crate) fn write(&mut self, bytes: &[u8]) {
+    if self.stack.is_empty() {
+      panic!("State::write: Empty stack.");
+    }
     self.allocator.write(bytes, self.stack[0]);
     self.stack[0] += bytes.len();
+  }
+
+  pub(crate) fn finish(mut self) -> A::Output {
+    self.pop();
+    assert_eq!(self.stack.len(), 0);
+    self.allocator.finish(self.end)
+  }
+
+  pub(crate) fn seed(&self) -> &C::Seed {
+    &self.seed
   }
 
   /// Transform this state into the state for another continuation.
@@ -62,21 +78,12 @@ impl<A: Allocator, C: Continuation<A>> State<A, C> {
   where
     C::Seed: Is<Type = D::Seed>,
   {
-    State::new(self.allocator, self.seed.identity())
-  }
-}
-
-impl<A: Allocator, C: Continuation<A>> State<A, C>
-where
-  C::Seed: Is<Type = ()>,
-{
-  pub fn replace<D: Continuation<A>>(self, seed: D::Seed) -> State<A, D> {
     State {
-      allocator: self.allocator,
-      end: self.end,
-      stack: self.stack,
+      allocator:    self.allocator,
       continuation: PhantomData,
-      seed,
+      end:          self.end,
+      seed:         self.seed.identity(),
+      stack:        self.stack,
     }
   }
 }

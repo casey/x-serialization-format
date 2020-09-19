@@ -273,8 +273,9 @@ impl Tokens for Structure {
       impl<A: #x::Allocator, C: #x::Continuation<A>> #x::Continuation<A> for #continuable<A, C> {
         type Seed = C::Seed;
 
-        fn continuation(allocator: A, seed: Self::Seed) -> Self {
-          #continuable { state: #x::State::new(allocator, seed) }
+        fn continuation(state: #x::State<A, Self>) -> Self {
+          // TODO: Why the fuck is this call to identity necessary?
+          #continuable { state: state.identity() }
         }
       }
       )*
@@ -458,8 +459,8 @@ mod tests {
       impl<A: ::x::Allocator, C: ::x::Continuation<A>> ::x::Continuation<A> for FooSerializerB<A, C> {
         type Seed = C::Seed;
 
-        fn continuation(allocator: A, seed: Self::Seed) -> Self {
-          FooSerializerB { state: ::x::State::new(allocator, seed) }
+        fn continuation(state: ::x::State<A, Self>) -> Self {
+          FooSerializerB { state: state.identity() }
         }
       }
     );
@@ -574,8 +575,8 @@ mod tests {
       impl<A: ::x::Allocator, C: ::x::Continuation<A>> ::x::Continuation<A> for FooSerializerOne<A, C> {
         type Seed = C::Seed;
 
-        fn continuation(allocator: A, seed: Self::Seed) -> Self {
-          FooSerializerOne { state: ::x::State::new(allocator, seed) }
+        fn continuation(state: ::x::State<A, Self>) -> Self {
+          FooSerializerOne { state: state.identity() }
         }
       }
     );

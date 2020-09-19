@@ -18,7 +18,8 @@ impl Allocator for VecAllocator {
     self.vec.place(bytes, offset);
   }
 
-  fn finish(self) -> Self::Output {
+  fn finish(self, end: usize) -> Self::Output {
+    assert_eq!(self.vec.len(), end);
     self.vec
   }
 }

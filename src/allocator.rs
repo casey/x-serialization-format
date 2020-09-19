@@ -3,5 +3,5 @@ pub trait Allocator {
 
   fn write(&mut self, bytes: &[u8], offset: usize);
 
-  fn finish(self) -> Self::Output;
+  fn finish(self, end: usize) -> Self::Output;
 }

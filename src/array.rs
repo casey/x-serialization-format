@@ -52,9 +52,11 @@ impl<A: Allocator, C: Continuation<A>, E: X, const SIZE: usize> ArraySerializer<
       todo!()
     }
 
-    let serialized = self.serialized + 1;
+    let serialized = self.serialized;
 
-    let state = self.state.wrap(|inner| ArraySeed { serialized, inner });
+    let state = self
+      .state
+      .transform(|inner| ArraySeed { serialized, inner });
 
     <E as X>::Serializer::new(state)
   }
@@ -77,27 +79,16 @@ impl<A: Allocator, C: Continuation<A>, E: X, const SIZE: usize> Continuation<A>
 {
   type Seed = ArraySeed<A, C>;
 
-  fn continuation(allocator: A, seed: Self::Seed) -> Self {
+  fn continuation(state: State<A, Self>) -> Self {
+    let serialized = state.seed().serialized + 1;
+
     ArraySerializer {
-      element:    PhantomData,
-      serialized: seed.serialized,
-      state:      State::new(allocator, seed.inner),
+      element: PhantomData,
+      state: state.transform(|seed| seed.inner),
+      serialized,
     }
   }
-
-  fn continuation_from_state(state: State<A, Self>) -> Self {
-    panic!()
-  }
 }
-
-// Horrible options:
-// - I can just add the stack as an argument to Continuation::continuation, so
-//   you can reconstruct the state.
-//
-// - I could try to move the continuation seed out of State.
-//
-// - I could make continuation take a State<A, ()>, which it can then insert its
-//   own seed into
 
 pub struct ArraySeed<A: Allocator, C: Continuation<A>> {
   serialized: usize,

@@ -3,14 +3,14 @@ use crate::common::*;
 pub struct WriteAllocator<W: Write + Seek> {
   writer: W,
   error:  Option<io::Error>,
-  offset: usize,
+  end:    usize,
 }
 
 impl<W: Write + Seek> WriteAllocator<W> {
   pub fn new(writer: W) -> WriteAllocator<W> {
     WriteAllocator {
       error: None,
-      offset: 0,
+      end: 0,
       writer,
     }
   }
@@ -24,7 +24,7 @@ impl<W: Write + Seek> Allocator for WriteAllocator<W> {
       return;
     }
 
-    if self.offset != offset {
+    if self.end != offset {
       // TODO: Fix this unwrap
       let seek_from = SeekFrom::Start(offset.try_into().unwrap());
 
@@ -39,12 +39,15 @@ impl<W: Write + Seek> Allocator for WriteAllocator<W> {
       return;
     }
 
-    self.offset += bytes.len();
+    self.end = offset + bytes.len();
   }
 
-  fn finish(self) -> Self::Output {
+  fn finish(self, end: usize) -> Self::Output {
     match self.error {
-      None => Ok(()),
+      None => {
+        assert_eq!(self.end, end);
+        Ok(())
+      },
       Some(error) => Err(error),
     }
   }

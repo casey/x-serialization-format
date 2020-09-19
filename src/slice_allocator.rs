@@ -2,6 +2,7 @@ use crate::common::*;
 
 pub struct SliceAllocator<'slice> {
   slice: &'slice mut [u8],
+  // TODO: this can be removed
   end:   usize,
 }
 
@@ -21,8 +22,9 @@ impl<'slice> Allocator for SliceAllocator<'slice> {
     self.end = offset + bytes.len();
   }
 
-  fn finish(self) -> Self::Output {
-    &self.slice[..self.end]
+  fn finish(self, end: usize) -> Self::Output {
+    assert_eq!(self.end, end);
+    &self.slice[..end]
   }
 }
 

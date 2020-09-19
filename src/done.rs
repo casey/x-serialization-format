@@ -2,7 +2,7 @@ use crate::common::*;
 
 #[must_use]
 pub struct Done<A: Allocator> {
-  allocator: A,
+  state: State<A, Self>,
 }
 
 impl<A: Allocator> Done<A> {
@@ -11,14 +11,14 @@ impl<A: Allocator> Done<A> {
   // fixed.
   #[inline(always)]
   pub fn done(self) -> A::Output {
-    self.allocator.finish()
+    self.state.finish()
   }
 }
 
 impl<A: Allocator> Continuation<A> for Done<A> {
   type Seed = ();
 
-  fn continuation(allocator: A, _seed: Self::Seed) -> Self {
-    Self { allocator }
+  fn continuation(state: State<A, Self>) -> Self {
+    Self { state }
   }
 }

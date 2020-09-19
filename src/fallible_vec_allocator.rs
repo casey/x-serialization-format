@@ -45,9 +45,12 @@ impl Allocator for FallibleVecAllocator {
     self.vec.place(bytes, offset);
   }
 
-  fn finish(self) -> Self::Output {
+  fn finish(self, end: usize) -> Self::Output {
     match self.error {
-      None => Ok(self.vec),
+      None => {
+        assert_eq!(self.vec.len(), end);
+        Ok(self.vec)
+      },
       Some(error) => Err(error),
     }
   }
