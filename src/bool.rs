@@ -47,7 +47,7 @@ impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for BoolSerializer<A, C>
     let native: bool = *native.borrow();
     // todo: document
     let value = if native { true } else { false };
-    let byte = bool_bitpatteren(value);
+    let byte = bool_bit_pattern(value);
     self.state.write(&[byte]);
     self.state.continuation()
   }
