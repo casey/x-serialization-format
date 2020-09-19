@@ -1,6 +1,7 @@
 // core
 pub(crate) use core::{
   borrow::Borrow,
+  convert::TryInto,
   marker::PhantomData,
   mem::{self, MaybeUninit},
 };
@@ -19,9 +20,17 @@ pub(crate) use crate::Result;
 
 #[cfg(feature = "alloc")]
 mod alloc {
+  // dependencies
   pub(crate) use ::alloc::{collections::TryReserveError, vec::Vec};
 
+  // traits
+  pub(crate) use crate::vec_ext::VecExt;
+
+  // structs and enums
   pub(crate) use crate::vec_allocator::VecAllocator;
+
+  #[cfg(test)]
+  pub(crate) use ::alloc::vec;
 }
 
 #[cfg(feature = "alloc")]
@@ -29,7 +38,7 @@ pub(crate) use self::alloc::*;
 
 #[cfg(feature = "std")]
 mod std {
-  pub(crate) use std::io::{self, Seek, Write};
+  pub(crate) use std::io::{self, Seek, SeekFrom, Write};
 }
 
 #[cfg(feature = "std")]

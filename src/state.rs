@@ -4,12 +4,17 @@ pub struct State<A: Allocator, C: Continuation<A>> {
   allocator:    A,
   seed:         C::Seed,
   continuation: PhantomData<C>,
+  end:          usize,
+  // TODO: This can't be a vec in no-alloc/no-std contexts
+  stack:        Vec<usize>,
 }
 
 impl<A: Allocator, C: Continuation<A>> State<A, C> {
   pub fn new(allocator: A, seed: C::Seed) -> Self {
     Self {
       continuation: PhantomData,
+      end: 0,
+      stack: Vec::new(),
       allocator,
       seed,
     }
@@ -19,12 +24,28 @@ impl<A: Allocator, C: Continuation<A>> State<A, C> {
     C::continuation(self.allocator, self.seed)
   }
 
-  pub fn decompose(self) -> (A, C::Seed) {
-    (self.allocator, self.seed)
+  pub fn wrap<D: Continuation<A>, W: Fn(C::Seed) -> D::Seed>(self, wrapper: W) -> State<A, D> {
+    State {
+      allocator:    self.allocator,
+      end:          self.end,
+      stack:        self.stack,
+      seed:         wrapper(self.seed),
+      continuation: PhantomData,
+    }
+  }
+
+  pub(crate) fn push(&mut self, size: usize) {
+    self.stack.push(self.end);
+    self.end += size;
+  }
+
+  pub(crate) fn pop(&mut self) {
+    self.stack.pop().unwrap();
   }
 
   pub(crate) fn write(&mut self, bytes: &[u8]) {
-    self.allocator.write(bytes);
+    self.allocator.write(bytes, self.stack[0]);
+    self.stack[0] += bytes.len();
   }
 
   /// Transform this state into the state for another continuation.
@@ -45,6 +66,17 @@ impl<A: Allocator, C: Continuation<A>> State<A, C> {
   }
 }
 
-// write(bytes: &[u8], offset: usize);
-// but also needs to be able to reserve space for a new object,
-// and get its offset
+impl<A: Allocator, C: Continuation<A>> State<A, C>
+where
+  C::Seed: Is<Type = ()>,
+{
+  pub fn replace<D: Continuation<A>>(self, seed: D::Seed) -> State<A, D> {
+    State {
+      allocator: self.allocator,
+      end: self.end,
+      stack: self.stack,
+      continuation: PhantomData,
+      seed,
+    }
+  }
+}

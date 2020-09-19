@@ -15,21 +15,34 @@ impl FallibleVecAllocator {
 impl Allocator for FallibleVecAllocator {
   type Output = Result<Vec<u8>, TryReserveError>;
 
-  fn write(&mut self, bytes: &[u8]) {
+  fn write(&mut self, bytes: &[u8], offset: usize) {
     if self.error.is_some() {
       return;
     }
 
-    if let Err(error) = self.vec.try_reserve(bytes.len()) {
-      self.error = Some(error);
+    // Calculate total number of bytes:
+    let end = offset + bytes.len();
 
-      // Drop current allocation to help alleviate memory pressure.
-      self.vec = Vec::new();
+    // If total exceeds the length of the vector,
+    if end > self.vec.len() {
+      // calculate additional number of bytes,
+      let additional = end - self.vec.len();
 
-      return;
+      // and try to extend self.vec by that number of bytes.
+      if let Err(error) = self.vec.try_reserve(additional) {
+        // If an error occured, drop current allocation to help alleviate memory
+        // pressure,
+        self.vec = Vec::new();
+
+        // save the error,
+        self.error = Some(error);
+
+        // and return. All future writes will be ignored.
+        return;
+      }
     }
 
-    self.vec.extend(bytes);
+    self.vec.place(bytes, offset);
   }
 
   fn finish(self) -> Self::Output {

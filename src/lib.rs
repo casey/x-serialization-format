@@ -58,22 +58,28 @@ mod common;
 mod continuation;
 mod done;
 mod error;
-mod fallible_vec_allocator;
 mod i8;
 mod integer;
 mod is;
 mod serializer;
 mod slice_allocator;
-mod stack;
 mod state;
 mod u8;
 mod unit;
 mod view;
-mod write_allocator;
 mod x;
 
 #[cfg(feature = "alloc")]
 mod vec_allocator;
+
+#[cfg(feature = "alloc")]
+mod fallible_vec_allocator;
+
+#[cfg(feature = "alloc")]
+mod vec_ext;
+
+#[cfg(feature = "std")]
+mod write_allocator;
 
 #[cfg(test)]
 mod test;
