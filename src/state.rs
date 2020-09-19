@@ -78,12 +78,6 @@ impl<A: Allocator, C: Continuation<A>> State<A, C> {
   where
     C::Seed: Is<Type = D::Seed>,
   {
-    State {
-      allocator:    self.allocator,
-      continuation: PhantomData,
-      end:          self.end,
-      seed:         self.seed.identity(),
-      stack:        self.stack,
-    }
+    self.transform(Is::identity)
   }
 }
