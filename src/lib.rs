@@ -30,6 +30,9 @@ pub use crate::integer::{
 #[cfg(feature = "alloc")]
 pub use crate::{fallible_vec_allocator::FallibleVecAllocator, vec_allocator::VecAllocator};
 
+#[cfg(feature = "std")]
+pub use crate::write_allocator::WriteAllocator;
+
 #[doc(hidden)]
 /// This export is used by `x-derive` to access `core`
 pub use core;
@@ -44,6 +47,9 @@ pub type Result<T, E = Error> = core::result::Result<T, E>;
 
 #[cfg(feature = "alloc")]
 extern crate alloc;
+
+#[cfg(feature = "std")]
+extern crate std;
 
 mod allocator;
 mod array;
@@ -63,6 +69,7 @@ mod state;
 mod u8;
 mod unit;
 mod view;
+mod write_allocator;
 mod x;
 
 #[cfg(feature = "alloc")]

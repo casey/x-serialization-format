@@ -1,7 +1,5 @@
 use crate::common::*;
 
-use alloc::vec::Vec;
-
 #[derive(Default)]
 pub struct FallibleVecAllocator {
   vec:   Vec<u8>,

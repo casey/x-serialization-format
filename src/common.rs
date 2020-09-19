@@ -1,3 +1,4 @@
+// core
 pub(crate) use core::{
   borrow::Borrow,
   marker::PhantomData,
@@ -25,6 +26,14 @@ mod alloc {
 
 #[cfg(feature = "alloc")]
 pub(crate) use self::alloc::*;
+
+#[cfg(feature = "std")]
+mod std {
+  pub(crate) use std::io::{self, Seek, Write};
+}
+
+#[cfg(feature = "std")]
+pub(crate) use self::std::*;
 
 #[cfg(test)]
 mod test {
