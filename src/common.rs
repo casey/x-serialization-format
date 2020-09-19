@@ -18,7 +18,7 @@ pub(crate) use crate::Result;
 
 #[cfg(feature = "alloc")]
 mod alloc {
-  pub(crate) use ::alloc::vec::Vec;
+  pub(crate) use ::alloc::{collections::TryReserveError, vec::Vec};
 
   pub(crate) use crate::vec_allocator::VecAllocator;
 }

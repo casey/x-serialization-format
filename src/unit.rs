@@ -12,9 +12,7 @@ impl X for () {
 impl View for () {
   type Native = ();
 
-  fn to_native(&self) -> Self::Native {
-    ()
-  }
+  fn to_native(&self) -> Self::Native {}
 
   fn check<'value>(_suspect: &'value MaybeUninit<Self>, _buffer: &[u8]) -> Result<&'value Self> {
     Ok(&())

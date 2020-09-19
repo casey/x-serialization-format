@@ -46,6 +46,7 @@ impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for BoolSerializer<A, C>
   fn serialize<B: Borrow<Self::Native>>(mut self, native: B) -> C {
     let native: bool = *native.borrow();
     // todo: document
+    #[allow(clippy::needless_bool)]
     let value = if native { true } else { false };
     let byte = bool_bit_pattern(value);
     self.state.write(&[byte]);

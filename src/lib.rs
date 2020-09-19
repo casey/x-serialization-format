@@ -1,11 +1,12 @@
 #![no_std]
-#![feature(generic_associated_types)]
 #![feature(arbitrary_enum_discriminant)]
+#![feature(associated_type_defaults)]
 #![feature(concat_idents)]
+#![feature(generic_associated_types)]
+#![feature(maybe_uninit_ref)]
 #![feature(min_const_generics)]
 #![feature(raw_ref_op)]
-#![feature(maybe_uninit_ref)]
-#![feature(associated_type_defaults)]
+#![feature(try_reserve)]
 #![allow(incomplete_features)]
 
 // traits
@@ -27,7 +28,7 @@ pub use crate::integer::{
 };
 
 #[cfg(feature = "alloc")]
-pub use crate::vec_allocator::VecAllocator;
+pub use crate::{fallible_vec_allocator::FallibleVecAllocator, vec_allocator::VecAllocator};
 
 #[doc(hidden)]
 /// This export is used by `x-derive` to access `core`
@@ -41,6 +42,9 @@ pub use is::Is;
 // Result type alias with E defaulting to this crates Error type.
 pub type Result<T, E = Error> = core::result::Result<T, E>;
 
+#[cfg(feature = "alloc")]
+extern crate alloc;
+
 mod allocator;
 mod array;
 mod bool;
@@ -48,6 +52,7 @@ mod common;
 mod continuation;
 mod done;
 mod error;
+mod fallible_vec_allocator;
 mod i8;
 mod integer;
 mod is;
@@ -59,9 +64,6 @@ mod u8;
 mod unit;
 mod view;
 mod x;
-
-#[cfg(feature = "alloc")]
-extern crate alloc;
 
 #[cfg(feature = "alloc")]
 mod vec_allocator;

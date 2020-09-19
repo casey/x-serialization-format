@@ -38,10 +38,9 @@ impl<A: Allocator, C: Continuation<A>, E: X, const SIZE: usize> Serializer<A, C>
   }
 
   fn serialize<B: Borrow<Self::Native>>(mut self, native: B) -> C {
-    let native = native.borrow();
-    for i in 0..SIZE {
+    for element in native.borrow() {
       let element_serializer = self.element_serializer();
-      self = element_serializer.serialize(&native[i]);
+      self = element_serializer.serialize(element);
     }
     self.state.continuation()
   }
