@@ -24,6 +24,10 @@ impl Allocator for FallibleVecAllocator {
 
     if let Err(error) = self.vec.try_reserve(bytes.len()) {
       self.error = Some(error);
+
+      // Drop current allocation to help alleviate memory pressure.
+      self.vec = Vec::new();
+
       return;
     }
 

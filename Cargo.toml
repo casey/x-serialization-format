@@ -6,8 +6,9 @@ edition   = "2018"
 autotests = false
 
 [features]
-default = ["alloc"]
+default = ["std"]
 alloc   = []
+std     = ["alloc"]
 
 [dependencies]
 x-derive = { path = "x-derive" }
