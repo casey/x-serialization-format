@@ -18,8 +18,18 @@ impl<E: View, const SIZE: usize> View for [E; SIZE] {
     todo!()
   }
 
-  fn check<'value>(suspect: &'value MaybeUninit<Self>, _buffer: &[u8]) -> Result<&'value Self> {
-    // TODO: Actuall implement this!
+  fn check<'value>(suspect: &'value MaybeUninit<Self>, buffer: &[u8]) -> Result<&'value Self> {
+    let pointer: *const [E; SIZE] = suspect.as_ptr();
+
+    let pointer = pointer as *const [MaybeUninit<E>; SIZE];
+
+    // TODO: is this safe?
+    let suspects = unsafe { &*pointer };
+
+    for suspect_element in suspects {
+      View::check(suspect_element, buffer)?;
+    }
+
     Ok(unsafe { suspect.assume_init_ref() })
   }
 }
