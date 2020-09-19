@@ -37,10 +37,14 @@ impl<A: Allocator, C: Continuation<A>> State<A, C> {
   /// object has no state of its own. This occurs when serializing composite
   /// types where all state is lifted into the type system, and thus no run-time
   /// state exists.
-  pub fn transform<D: Continuation<A>>(self) -> State<A, D>
+  pub fn identity<D: Continuation<A>>(self) -> State<A, D>
   where
     C::Seed: Is<Type = D::Seed>,
   {
     State::new(self.allocator, self.seed.identity())
   }
 }
+
+// write(bytes: &[u8], offset: usize);
+// but also needs to be able to reserve space for a new object,
+// and get its offset

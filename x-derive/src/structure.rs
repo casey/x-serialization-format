@@ -252,7 +252,7 @@ impl Tokens for Structure {
         }
 
         fn #serializer_methods(self) -> <#types as #x::X>::Serializer<A, #continuations> {
-          <#types as #x::X>::Serializer::new(self.state.transform())
+          <#types as #x::X>::Serializer::new(self.state.identity())
         }
       }
       )*
@@ -423,7 +423,7 @@ mod tests {
         }
 
         fn a_serializer(self) -> <u16 as ::x::X>::Serializer<A, FooSerializerB<A, C> > {
-          <u16 as ::x::X>::Serializer::new(self.state.transform())
+          <u16 as ::x::X>::Serializer::new(self.state.identity())
         }
       }
 
@@ -433,7 +433,7 @@ mod tests {
         }
 
         fn b_serializer(self) -> <String as ::x::X>::Serializer<A, C> {
-          <String as ::x::X>::Serializer::new(self.state.transform())
+          <String as ::x::X>::Serializer::new(self.state.identity())
         }
       }
 
@@ -539,7 +539,7 @@ mod tests {
         }
 
         fn zero_serializer(self) -> <u16 as ::x::X>::Serializer<A, FooSerializerOne<A, C> > {
-          <u16 as ::x::X>::Serializer::new(self.state.transform())
+          <u16 as ::x::X>::Serializer::new(self.state.identity())
         }
       }
 
@@ -549,7 +549,7 @@ mod tests {
         }
 
         fn one_serializer(self) -> <String as ::x::X>::Serializer<A, C> {
-          <String as ::x::X>::Serializer::new(self.state.transform())
+          <String as ::x::X>::Serializer::new(self.state.identity())
         }
       }
 
