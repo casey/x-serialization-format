@@ -15,7 +15,13 @@ pub use crate::{
 };
 
 // structs and enums
-pub use crate::{done::Done, error::Error, slice_allocator::SliceAllocator, state::State};
+pub use crate::{
+  done::Done,
+  error::Error,
+  slice_allocator::SliceAllocator,
+  state::State,
+  usize::{Usize, UsizeSerializer},
+};
 
 // signed inegers
 pub use crate::integer::{
@@ -31,7 +37,7 @@ pub use crate::integer::{
 pub use crate::{fallible_vec_allocator::FallibleVecAllocator, vec_allocator::VecAllocator};
 
 #[cfg(feature = "std")]
-pub use crate::write_allocator::WriteAllocator;
+pub use crate::file_allocator::FileAllocator;
 
 #[doc(hidden)]
 /// This export is used by `x-derive` to access `core`
@@ -52,6 +58,7 @@ extern crate alloc;
 extern crate std;
 
 mod allocator;
+mod anonymous_serializer;
 mod array;
 mod bool;
 mod common;
@@ -61,11 +68,19 @@ mod error;
 mod i8;
 mod integer;
 mod is;
+mod offset;
+mod range_ext;
 mod serializer;
+mod slice;
 mod slice_allocator;
 mod state;
+mod to_i64;
+mod to_u64;
+// mod string;
+mod isize;
 mod u8;
 mod unit;
+mod usize;
 mod view;
 mod x;
 
@@ -79,7 +94,7 @@ mod fallible_vec_allocator;
 mod vec_ext;
 
 #[cfg(feature = "std")]
-mod write_allocator;
+mod file_allocator;
 
 #[cfg(test)]
 mod test;

@@ -1,22 +1,25 @@
 use crate::common::*;
 
-pub struct WriteAllocator<W: Write + Seek> {
-  writer: W,
-  error:  Option<io::Error>,
-  end:    usize,
+// TODO: document that anything that implements write and seek can be used
+pub struct FileAllocator<F: Write + Seek> {
+  file:     F,
+  error:    Option<io::Error>,
+  position: usize,
+  end:      usize,
 }
 
-impl<W: Write + Seek> WriteAllocator<W> {
-  pub fn new(writer: W) -> WriteAllocator<W> {
-    WriteAllocator {
+impl<F: Write + Seek> FileAllocator<F> {
+  pub fn new(file: F) -> FileAllocator<F> {
+    Self {
       error: None,
+      position: 0,
       end: 0,
-      writer,
+      file,
     }
   }
 }
 
-impl<W: Write + Seek> Allocator for WriteAllocator<W> {
+impl<F: Write + Seek> Allocator for FileAllocator<F> {
   type Output = io::Result<()>;
 
   fn write(&mut self, bytes: &[u8], offset: usize) {
@@ -24,22 +27,23 @@ impl<W: Write + Seek> Allocator for WriteAllocator<W> {
       return;
     }
 
-    if self.end != offset {
+    if self.position != offset {
       // TODO: Fix this unwrap
       let seek_from = SeekFrom::Start(offset.try_into().unwrap());
 
-      if let Err(error) = self.writer.seek(seek_from) {
+      if let Err(error) = self.file.seek(seek_from) {
         self.error = Some(error);
         return;
       }
     }
 
-    if let Err(error) = self.writer.write_all(bytes) {
+    if let Err(error) = self.file.write_all(bytes) {
       self.error = Some(error);
       return;
     }
 
-    self.end = offset + bytes.len();
+    self.position = offset + bytes.len();
+    self.end = self.end.max(self.position);
   }
 
   fn finish(self, end: usize) -> Self::Output {

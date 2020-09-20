@@ -4,16 +4,30 @@ pub(crate) use core::{
   convert::TryInto,
   marker::PhantomData,
   mem::{self, MaybeUninit},
+  ops::Range,
+  slice,
 };
+
+// dependencies
+pub(crate) use static_assertions::const_assert;
 
 // traits
 pub(crate) use crate::{
-  allocator::Allocator, continuation::Continuation, is::Is, serializer::Serializer, view::View,
-  x::X,
+  allocator::Allocator, continuation::Continuation, is::Is, range_ext::RangeExt,
+  serializer::Serializer, to_i64::ToI64, to_u64::ToU64, view::View, x::X,
 };
 
 // structs and enums
-pub(crate) use crate::{done::Done, error::Error, slice_allocator::SliceAllocator, state::State};
+pub(crate) use crate::{
+  anonymous_serializer::AnonymousSerializer,
+  done::Done,
+  error::Error,
+  integer::{I64Serializer, U64Serializer, I64, U64},
+  offset::Offset,
+  slice_allocator::SliceAllocator,
+  state::State,
+  usize::Usize,
+};
 
 // type aliases
 pub(crate) use crate::Result;

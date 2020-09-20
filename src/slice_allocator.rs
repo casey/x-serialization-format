@@ -1,5 +1,6 @@
 use crate::common::*;
 
+// TODO: Should I also have a fallible slice allocator?
 pub struct SliceAllocator<'slice> {
   slice: &'slice mut [u8],
   // TODO: this can be removed

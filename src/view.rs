@@ -10,6 +10,11 @@ pub trait View: Sized {
 
     let checked = Self::check(unchecked, buffer)?;
 
+    let unchecked_pointer: *const MaybeUninit<Self> = unchecked;
+    let checked_pointer: *const Self = checked;
+
+    assert_eq!(checked_pointer as usize, unchecked_pointer as usize);
+
     Ok(checked)
   }
 

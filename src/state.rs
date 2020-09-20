@@ -24,6 +24,8 @@ impl<A: Allocator, C: Continuation<A>> State<A, C> {
     C::continuation(self)
   }
 
+  /// Transform this state into the state for another continuation by applying a
+  /// function to the seed.
   pub fn transform<D: Continuation<A>, W: Fn(C::Seed) -> D::Seed>(
     self,
     transformer: W,
@@ -35,6 +37,10 @@ impl<A: Allocator, C: Continuation<A>> State<A, C> {
       seed:         transformer(self.seed),
       continuation: PhantomData,
     }
+  }
+
+  pub(crate) fn end(&self) -> usize {
+    self.end
   }
 
   pub(crate) fn push(&mut self, size: usize) {
@@ -64,7 +70,8 @@ impl<A: Allocator, C: Continuation<A>> State<A, C> {
     &self.seed
   }
 
-  /// Transform this state into the state for another continuation.
+  /// Transform this state into the state for another continuation by reusing
+  /// the current seed.
   ///
   /// Only implemented if the type of the current continuation's state,
   /// C::State, is that same as that of the destination continuation's state,
