@@ -13,8 +13,8 @@ pub(crate) use static_assertions::const_assert;
 
 // traits
 pub(crate) use crate::{
-  allocator::Allocator, continuation::Continuation, is::Is, range_ext::RangeExt,
-  serializer::Serializer, to_i64::ToI64, to_u64::ToU64, view::View, x::X,
+  allocator::Allocator, continuation::Continuation, is::Is, maybe_uninit_ext::MaybeUninitExt,
+  range_ext::RangeExt, serializer::Serializer, to_i64::ToI64, to_u64::ToU64, view::View, x::X,
 };
 
 // structs and enums

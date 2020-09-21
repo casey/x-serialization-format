@@ -16,12 +16,12 @@ impl<V: View> Offset<V> {
     start as *const V
   }
 
-  /// Check that `suspect` is a valid offset that points to `count` valid
+  /// Check that `suspect` is a valid offset that points to `length` valid
   /// elements.
   pub(crate) fn check<'value>(
     suspect: &'value MaybeUninit<Self>,
     buffer: &[u8],
-    count: usize,
+    length: usize,
   ) -> Result<&'value [V]> {
     let buffer_range = Range {
       start: buffer.as_ptr(),
@@ -43,7 +43,7 @@ impl<V: View> Offset<V> {
       }
     }
 
-    let inner = convert_maybe_uninit_ref::<Self, Usize>(suspect);
+    let inner = suspect.cast::<Usize>();
 
     let inner = View::check(inner, buffer)?;
 
@@ -65,7 +65,7 @@ impl<V: View> Offset<V> {
     {
       let start = start as *const u8;
 
-      let end = start.wrapping_add(count * mem::size_of::<V>());
+      let end = start.wrapping_add(length * mem::size_of::<V>());
 
       if end < start {
         return Err(Error::OffsetWrap { start, end });
@@ -82,32 +82,18 @@ impl<V: View> Offset<V> {
     }
 
     let slice: &[MaybeUninit<V>] =
-      unsafe { slice::from_raw_parts(start as *const MaybeUninit<V>, count) };
+      unsafe { slice::from_raw_parts(start as *const MaybeUninit<V>, length) };
 
     for element in slice {
       View::check(element, buffer)?;
     }
 
-    Ok(value.to_slice(count))
+    Ok(value.to_slice(length))
   }
 
-  fn to_slice(&self, count: usize) -> &[V] {
-    unsafe { slice::from_raw_parts(self.as_ptr(), count) }
+  fn to_slice(&self, length: usize) -> &[V] {
+    unsafe { slice::from_raw_parts(self.as_ptr(), length) }
   }
-}
-
-fn convert_maybe_uninit_ref<T, U>(e: &MaybeUninit<T>) -> &MaybeUninit<U> {
-  assert_eq!(mem::align_of::<U>(), 1);
-  assert!(mem::size_of::<T>() >= mem::size_of::<U>());
-
-  let pointer: *const MaybeUninit<T> = e;
-  let pointer = pointer as *const MaybeUninit<U>;
-
-  // Safe because:
-  // - pointer is not null becuase it's derived from a reference
-  // - MaybeUinint<U> has no alignment requirments
-  // - MaybeUinint<U> is the same size or smaller than MaybeUninit<T>
-  unsafe { &*pointer }
 }
 
 #[cfg(test)]

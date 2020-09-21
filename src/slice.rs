@@ -35,12 +35,15 @@ impl<V: View> View for Slice<V> {
   }
 
   fn check<'value>(suspect: &'value MaybeUninit<Self>, buffer: &[u8]) -> Result<&'value Self> {
-    let suspect_pointer: *const Self = suspect.as_ptr();
+    let length: &MaybeUninit<Usize> =
+      unsafe { &*((suspect.as_ptr() as *const Offset<V>).add(1) as *const MaybeUninit<Usize>) };
 
-    // Valid, since offset is first member of
-    // let offset_pointer = suspect_pointer as *const MaybeUninit<Offset<V>>;
+    let length = View::check(length, buffer)?;
 
-    // TODO: actually implement
+    let offset = suspect.cast::<Offset<V>>();
+
+    Offset::check(offset, buffer, length.to_native())?;
+
     Ok(unsafe { suspect.assume_init_ref() })
   }
 }
