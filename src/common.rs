@@ -26,6 +26,7 @@ pub(crate) use crate::{
   error::Error,
   integer::{I64Serializer, U64Serializer, I64, U64},
   offset::Offset,
+  padding_serializer::PaddingSerializer,
   slice::{Slice, SliceSerializer},
   slice_allocator::SliceAllocator,
   state::State,

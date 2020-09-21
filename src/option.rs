@@ -5,14 +5,15 @@ impl<N: X> X for core::option::Option<N> {
   type View = self::Option<N::View>;
 }
 
+const NONE_DISCRIMINANT: u8 = 0;
+const SOME_DISCRIMINANT: u8 = 1;
+
 #[repr(u8)]
 #[derive(Debug)]
 pub enum Option<V: View> {
-  None,
-  Some(V),
+  None = NONE_DISCRIMINANT,
+  Some(V) = SOME_DISCRIMINANT,
 }
-
-const SOME_DISCRIMINANT: u8 = 1;
 
 impl<V: View> View for self::Option<V> {
   type Native = core::option::Option<V::Native>;
@@ -30,16 +31,16 @@ impl<V: View> View for self::Option<V> {
     let discriminant = unsafe { *pointer };
 
     match discriminant {
-      0 => Ok(unsafe { suspect.assume_init_ref() }),
+      NONE_DISCRIMINANT => Ok(unsafe { suspect.assume_init_ref() }),
       SOME_DISCRIMINANT => {
         let payload = unsafe { pointer.add(1) } as *const MaybeUninit<V>;
         View::check(unsafe { &*payload }, buffer)?;
         Ok(unsafe { suspect.assume_init_ref() })
       },
       value => Err(Error::Discriminant {
-        value,
         maximum: SOME_DISCRIMINANT,
         ty: "Option",
+        value,
       }),
     }
   }
@@ -63,6 +64,9 @@ impl<A: Allocator, C: Continuation<A>, V: View> Serializer<A, C> for OptionSeria
   fn serialize<B: Borrow<Self::Native>>(mut self, native: B) -> C {
     match native.borrow() {
       None => {
+        assert_eq!(NONE_DISCRIMINANT, 0);
+        // We take advantage of the fact that None's discriminant is zero, and just emit
+        // a fully zeroed value:
         let mut value = self::Option::<V>::None;
         unsafe { ptr::write_bytes(&mut value, 0, 1) };
         let pointer: *const self::Option<V> = &value;
@@ -75,7 +79,7 @@ impl<A: Allocator, C: Continuation<A>, V: View> Serializer<A, C> for OptionSeria
       },
       Some(t) => {
         self.state.write(&[SOME_DISCRIMINANT]);
-        <Self::Native as X>::Serializer::new(self.state).serialize(native)
+        <V::Native as X>::Serializer::new(self.state).serialize(t)
       },
     }
   }
@@ -88,6 +92,7 @@ mod tests {
   #[test]
   fn basic() {
     ok(core::option::Option::<char>::None, &[0, 0, 0, 0]);
+    ok(core::option::Option::<char>::Some('a'), &[1, 97, 0, 0]);
   }
 
   #[test]
