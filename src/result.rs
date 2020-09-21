@@ -117,24 +117,31 @@ mod tests {
     ]);
   }
 
-  // TODO: add these tests
-  //   #[test]
-  //   fn invalid_discriminant() {
-  //     assert_eq!(
-  //       core::option::Option::<u8>::view(&[2, 0]).unwrap_err(),
-  //       Error::Discriminant {
-  //         value:   2,
-  //         maximum: SOME_DISCRIMINANT,
-  //         ty:      "Option",
-  //       }
-  //     );
-  //   }
+  #[test]
+  fn invalid_discriminant() {
+    assert_eq!(
+      core::result::Result::<u8, u8>::view(&[2, 0]).unwrap_err(),
+      Error::Discriminant {
+        value:   2,
+        maximum: ERR_DISCRIMINANT,
+        ty:      "Result",
+      }
+    );
+  }
 
-  //   #[test]
-  //   fn invalid_payload() {
-  //     assert_eq!(
-  //       core::option::Option::<char>::view(&[1, 0xFF, 0xFF,
-  // 0xFF]).unwrap_err(),       Error::Char { value: 0xFFFFFF }
-  //     );
-  //   }
+  #[test]
+  fn invalid_ok() {
+    assert_eq!(
+      core::result::Result::<char, u8>::view(&[OK_DISCRIMINANT, 0xFF, 0xFF, 0xFF]).unwrap_err(),
+      Error::Char { value: 0xFFFFFF }
+    );
+  }
+
+  #[test]
+  fn invalid_err() {
+    assert_eq!(
+      core::result::Result::<u8, char>::view(&[ERR_DISCRIMINANT, 0xFF, 0xFF, 0xFF]).unwrap_err(),
+      Error::Char { value: 0xFFFFFF }
+    );
+  }
 }
