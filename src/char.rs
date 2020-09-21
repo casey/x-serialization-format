@@ -18,7 +18,7 @@ impl View for Char {
     char::from_u32(self.scalar()).unwrap()
   }
 
-  fn check<'value>(suspect: &'value MaybeUninit<Char>, _buffer: &[u8]) -> Result<&'value Self> {
+  fn check<'value>(suspect: &'value MaybeUninit<Self>, _buffer: &[u8]) -> Result<&'value Self> {
     // Safe: There are no bitpattern validity requirements for Self
     let value = unsafe { suspect.assume_init_ref() };
 

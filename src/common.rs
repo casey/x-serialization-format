@@ -6,7 +6,7 @@ pub(crate) use core::{
   marker::PhantomData,
   mem::{self, MaybeUninit},
   ops::Range,
-  slice,
+  ptr, slice,
   str::{self, Utf8Error},
 };
 

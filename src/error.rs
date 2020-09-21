@@ -41,6 +41,11 @@ pub enum Error {
   String {
     error: Utf8Error,
   },
+  Discriminant {
+    value:   u8,
+    maximum: u8,
+    ty:      &'static str,
+  },
 }
 
 impl From<Utf8Error> for Error {

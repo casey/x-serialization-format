@@ -74,6 +74,7 @@ mod is;
 mod isize;
 mod maybe_uninit_ext;
 mod offset;
+mod option;
 mod range_ext;
 mod serializer;
 mod slice;
