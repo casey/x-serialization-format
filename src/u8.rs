@@ -46,4 +46,10 @@ mod tests {
     ok( 1u8,     &[0x01]);
     ok( u8::MAX, &[0xFF]);
   }
+
+  #[test]
+  fn unambiguous_load() {
+    let buffer: &[u8] = &[10];
+    u8::load(&buffer).unwrap();
+  }
 }

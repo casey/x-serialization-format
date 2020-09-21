@@ -41,13 +41,13 @@ don't have to go and rewrite it later.
 
 - Simple: The encoding is straightforward and easy to understand. If you
   absolutely had to, writing your own deserializer or serializer would be
-  doable.
+  straightforward.
 
 ## Non-goals
 
 - Languages other than Rust: Currency, only Rust support is planned. If there
   is demand, support for other languages may implemented, but it isn't a
-  near-term goal.
+  near- or medium-term goal.
 
 ## Prior Art
 
@@ -137,7 +137,7 @@ value, for example to represent `Option::None`.
 
 #### `()`
 
-Since `()`, also called the unit type, has no values, it requires zero bits to
+Since `()`, also called the unit type, has a single value, it requires zero bits to
 represent, and thus the encoding is the empty byte string.
 
 #### `bool`
@@ -163,8 +163,9 @@ too big to fit into the platform's size type.
 
 #### `char`
 
-Characters are encoded as a `u32` containing the Unicode scalar value they
-represent.
+Characters are encoded as as the little endian bytes of the the Unicode scalar
+value they represent. Since only 3 bytes are required to represent all unicode
+scalar values, `char`s are encoded as 3 bytes intead of the usual 4.
 
 #### `&str`
 

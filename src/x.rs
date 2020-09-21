@@ -32,4 +32,8 @@ pub trait X {
   fn serialize_to_vec(&self) -> Vec<u8> {
     Self::store(VecAllocator::new()).serialize(self).done()
   }
+
+  fn view(buffer: &[u8]) -> Result<&Self::View> {
+    Self::View::load(buffer)
+  }
 }

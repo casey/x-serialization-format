@@ -1,11 +1,13 @@
 // core
 pub(crate) use core::{
   borrow::Borrow,
+  char,
   convert::TryInto,
   marker::PhantomData,
   mem::{self, MaybeUninit},
   ops::Range,
   slice,
+  str::{self, Utf8Error},
 };
 
 // dependencies
@@ -24,6 +26,7 @@ pub(crate) use crate::{
   error::Error,
   integer::{I64Serializer, U64Serializer, I64, U64},
   offset::Offset,
+  slice::{Slice, SliceSerializer},
   slice_allocator::SliceAllocator,
   state::State,
   usize::Usize,
@@ -35,7 +38,7 @@ pub(crate) use crate::Result;
 #[cfg(feature = "alloc")]
 mod alloc {
   // dependencies
-  pub(crate) use ::alloc::{collections::TryReserveError, vec::Vec};
+  pub(crate) use ::alloc::{collections::TryReserveError, string::String, vec::Vec};
 
   // traits
   pub(crate) use crate::vec_ext::VecExt;

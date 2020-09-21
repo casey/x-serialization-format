@@ -8,6 +8,7 @@
 #![feature(raw_ref_op)]
 #![feature(try_reserve)]
 #![allow(incomplete_features)]
+//! Foo;
 
 // traits
 pub use crate::{
@@ -16,6 +17,7 @@ pub use crate::{
 
 // structs and enums
 pub use crate::{
+  char::{Char, CharSerializer},
   done::Done,
   error::Error,
   slice_allocator::SliceAllocator,
@@ -61,6 +63,7 @@ mod allocator;
 mod anonymous_serializer;
 mod array;
 mod bool;
+mod char;
 mod common;
 mod continuation;
 mod done;
@@ -68,17 +71,17 @@ mod error;
 mod i8;
 mod integer;
 mod is;
+mod isize;
+mod maybe_uninit_ext;
 mod offset;
 mod range_ext;
 mod serializer;
 mod slice;
 mod slice_allocator;
 mod state;
+mod string;
 mod to_i64;
 mod to_u64;
-// mod string;
-mod isize;
-mod maybe_uninit_ext;
 mod u8;
 mod unit;
 mod usize;

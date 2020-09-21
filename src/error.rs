@@ -35,4 +35,16 @@ pub enum Error {
   Bool {
     value: u8,
   },
+  Char {
+    value: u32,
+  },
+  String {
+    error: Utf8Error,
+  },
+}
+
+impl From<Utf8Error> for Error {
+  fn from(error: Utf8Error) -> Self {
+    Error::String { error }
+  }
 }

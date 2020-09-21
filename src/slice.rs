@@ -12,7 +12,7 @@ pub struct Slice<V: View> {
 }
 
 impl<V: View> Slice<V> {
-  fn as_slice(&self) -> &[V] {
+  pub fn as_slice(&self) -> &[V] {
     let pointer = self.offset.as_ptr();
     unsafe { slice::from_raw_parts(pointer, self.length.to_native()) }
   }
