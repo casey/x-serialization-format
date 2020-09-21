@@ -1,5 +1,9 @@
 use crate::common::*;
 
+/// Serialize padding (zero bytes) equal to the difference between S and U.
+/// Meant to be used when you've serialized an S but a U is also possible.
+/// Should probably be more general and just accept a number of bytes of padding
+/// to serialized.
 pub(crate) struct PaddingSerializer<A: Allocator, C: Continuation<A>, S: View, U: View> {
   state: State<A, C>,
   s:     PhantomData<S>,
