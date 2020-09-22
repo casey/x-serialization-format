@@ -34,10 +34,6 @@ impl<'a, V: View> IntoIterator for &'a Slice<V> {
 impl<V: View> View for Slice<V> {
   type Native = Vec<V::Native>;
 
-  fn to_native(&self) -> Self::Native {
-    self.as_slice().iter().map(View::to_native).collect()
-  }
-
   fn check<'value>(suspect: &'value MaybeUninit<Self>, buffer: &[u8]) -> Result<&'value Self> {
     let length: &MaybeUninit<Usize> =
       unsafe { &*((suspect.as_ptr() as *const Offset<V>).add(1) as *const MaybeUninit<Usize>) };

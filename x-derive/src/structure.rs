@@ -165,9 +165,11 @@ impl Tokens for Structure {
       )
     };
 
-    let to_native_inner = match &self.input.fields {
-      Fields::Named(_) => quote!({#(#accessors: self.#accessors.to_native(),)*}),
-      Fields::Unnamed(_) => quote!((#(self.#accessors.to_native(),)*)),
+    let field_methods = &self.field_methods;
+
+    let from_view_inner = match &self.input.fields {
+      Fields::Named(_) => quote!({#(#accessors: view.#field_methods(),)*}),
+      Fields::Unnamed(_) => quote!((#(view.#field_methods(),)*)),
       Fields::Unit => quote!(),
     };
 
@@ -179,8 +181,6 @@ impl Tokens for Structure {
       }
     });
 
-    let field_methods = &self.field_methods;
-
     let continuable = &self.serializers[1..];
 
     let view_getters = match &self.input.fields {
@@ -188,7 +188,7 @@ impl Tokens for Structure {
         impl #view {
           #(
           fn #field_methods(&self) -> #types {
-            self.#accessors.to_native()
+            #x::X::from_view(&self.#accessors)
           }
           )*
         }
@@ -202,7 +202,7 @@ impl Tokens for Structure {
         type Serializer<A: #x::Allocator, C: #x::Continuation<A>> = #first_serializer<A, C>;
 
         fn from_view(view: &Self::View) -> Self {
-          panic!()
+          #ident #from_view_inner
         }
       }
 
@@ -213,10 +213,6 @@ impl Tokens for Structure {
 
       impl #x::View for #view {
         type Native = #ident;
-
-        fn to_native(&self) -> Self::Native {
-          #ident #to_native_inner
-        }
 
         fn check<'value>(
           suspect: &'value #x::core::mem::MaybeUninit<Self>,
@@ -234,12 +230,6 @@ impl Tokens for Structure {
           )*
           // All fields are valid, so the struct is valid.
           Ok(unsafe { suspect.assume_init_ref() })
-        }
-      }
-
-      impl From<&#view> for #ident {
-        fn from(view: &#view) -> Self {
-          view.to_native()
         }
       }
 
@@ -300,6 +290,11 @@ mod tests {
         type View = FooView;
 
         type Serializer<A: ::x::Allocator, C: ::x::Continuation<A>> = FooSerializer<A, C>;
+
+        fn from_view(view: &Self::View ) -> Self {
+          Foo
+        }
+
       }
 
       #[repr(C)]
@@ -308,22 +303,12 @@ mod tests {
       impl ::x::View for FooView {
         type Native = Foo;
 
-        fn to_native(&self) -> Self::Native {
-          Foo
-        }
-
         fn check<'value>(
           suspect: &'value ::x::core::mem::MaybeUninit<Self>,
           buffer: &[u8],
         ) -> ::x::Result<&'value Self> {
           let pointer: *const Self = suspect.as_ptr();
           Ok(unsafe { suspect.assume_init_ref() })
-        }
-      }
-
-      impl From<&FooView> for Foo {
-        fn from(view: &FooView) -> Self {
-          view.to_native()
         }
       }
 
@@ -357,6 +342,13 @@ mod tests {
         type View = FooView;
 
         type Serializer<A: ::x::Allocator, C: ::x::Continuation<A>> = FooSerializer<A, C>;
+
+        fn from_view(view: &Self::View) -> Self {
+          Foo {
+            a: view.a(),
+            b: view.b(),
+          }
+        }
       }
 
       #[repr(C)]
@@ -367,23 +359,16 @@ mod tests {
 
       impl FooView {
         fn a(&self) -> u16 {
-          self.a.to_native()
+          ::x::X::from_view(&self.a)
         }
 
         fn b(&self) -> String {
-          self.b.to_native()
+          ::x::X::from_view(&self.b)
         }
       }
 
       impl ::x::View for FooView {
         type Native = Foo;
-
-        fn to_native(&self) -> Self::Native {
-          Foo {
-            a: self.a.to_native(),
-            b: self.b.to_native(),
-          }
-        }
 
         fn check<'value>(
           suspect: &'value ::x::core::mem::MaybeUninit<Self>,
@@ -405,12 +390,6 @@ mod tests {
             FieldView::check(maybe_uninit_ref, buffer)?;
           }
           Ok(unsafe { suspect.assume_init_ref() })
-        }
-      }
-
-      impl From<&FooView> for Foo {
-        fn from(view: &FooView) -> Self {
-          view.to_native()
         }
       }
 
@@ -479,6 +458,10 @@ mod tests {
         type View = FooView;
 
         type Serializer<A: ::x::Allocator, C: ::x::Continuation<A>> = FooSerializer<A, C>;
+
+        fn from_view(view: &Self::View) -> Self {
+          Foo(view.zero(), view.one(),)
+        }
       }
 
       #[repr(C)]
@@ -486,20 +469,16 @@ mod tests {
 
       impl FooView {
         fn zero(&self) -> u16 {
-          self.0.to_native()
+          ::x::X::from_view(&self.0)
         }
 
         fn one(&self) -> String {
-          self.1.to_native()
+          ::x::X::from_view(&self.1)
         }
       }
 
       impl ::x::View for FooView {
         type Native = Foo;
-
-        fn to_native(&self) -> Self::Native {
-          Foo(self.0.to_native(), self.1.to_native(),)
-        }
 
         fn check<'value>(
           suspect: &'value ::x::core::mem::MaybeUninit<Self>,
@@ -521,12 +500,6 @@ mod tests {
             FieldView::check(maybe_uninit_ref, buffer)?;
           }
           Ok(unsafe { suspect.assume_init_ref() })
-        }
-      }
-
-      impl From<&FooView> for Foo {
-        fn from(view: &FooView) -> Self {
-          view.to_native()
         }
       }
 

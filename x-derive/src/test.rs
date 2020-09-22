@@ -4,7 +4,9 @@ macro_rules! assert_derive_x_expansion_eq {
     $($expansion:tt)*
   } => {
     {
-      let expansion = crate::derive_x_inner(quote::quote!($item)).expect("proc macro invocation failed");
+      let expansion =
+crate::derive_x_inner(quote::quote!($item)).expect("proc macro invocation
+failed");
 
       let have = expansion.to_string();
 

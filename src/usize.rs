@@ -18,10 +18,6 @@ pub struct Usize {
 impl View for Usize {
   type Native = usize;
 
-  fn to_native(&self) -> Self::Native {
-    self.inner.to_native() as usize
-  }
-
   fn check<'value>(suspect: &'value MaybeUninit<Self>, buffer: &[u8]) -> Result<&'value Self> {
     let struct_pointer: *const Usize = suspect.as_ptr();
 

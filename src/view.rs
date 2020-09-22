@@ -3,8 +3,6 @@ use crate::common::*;
 pub trait View: Sized {
   type Native: X;
 
-  fn to_native(&self) -> Self::Native;
-
   fn load(buffer: &[u8]) -> Result<&Self> {
     let unchecked = Self::cast(buffer, 0)?;
 
@@ -63,7 +61,7 @@ mod tests {
       type Serializer<A: Allocator, C: Continuation<A>> = Foo;
       type View = Foo;
 
-      fn from_view(view: &Self::View) -> Self {
+      fn from_view(_view: &Self::View) -> Self {
         panic!()
       }
     }
@@ -72,10 +70,6 @@ mod tests {
       type Native = Foo;
 
       fn check<'value>(_: &'value MaybeUninit<Self>, _: &[u8]) -> Result<&'value Self> {
-        panic!()
-      }
-
-      fn to_native(&self) -> Self::Native {
         panic!()
       }
     }

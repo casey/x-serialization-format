@@ -16,10 +16,6 @@ pub struct BoolSerializer<A: Allocator, C: Continuation<A>> {
 impl View for bool {
   type Native = bool;
 
-  fn to_native(&self) -> Self::Native {
-    *self
-  }
-
   fn check<'value>(suspect: &'value MaybeUninit<Self>, _buffer: &[u8]) -> Result<&'value Self> {
     assert_eq!(mem::size_of::<bool>(), 1);
 

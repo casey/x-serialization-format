@@ -10,17 +10,13 @@ impl<E: X, const SIZE: usize> X for [E; SIZE] {
   type Serializer<A: Allocator, C: Continuation<A>> = ArraySerializer<A, C, E, SIZE>;
   type View = [E::View; SIZE];
 
-  fn from_view(view: &Self::View) -> Self {
+  fn from_view(_view: &Self::View) -> Self {
     todo!()
   }
 }
 
 impl<E: View, const SIZE: usize> View for [E; SIZE] {
   type Native = [E::Native; SIZE];
-
-  fn to_native(&self) -> Self::Native {
-    todo!()
-  }
 
   fn check<'value>(suspect: &'value MaybeUninit<Self>, buffer: &[u8]) -> Result<&'value Self> {
     let pointer: *const [E; SIZE] = suspect.as_ptr();

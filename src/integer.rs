@@ -28,10 +28,6 @@ macro_rules! integer {
     impl View for $view {
       type Native = $native;
 
-      fn to_native(&self) -> Self::Native {
-        $native::from_le_bytes(self.le_bytes)
-      }
-
       fn check<'value>(suspect: &'value MaybeUninit<Self>, _buffer: &[u8]) -> Result<&'value Self> {
         // All bit patterns of the correct size are valid values of type Self.
         Ok(unsafe { suspect.assume_init_ref() })
@@ -48,12 +44,6 @@ macro_rules! integer {
       fn serialize<B: Borrow<Self::Native>>(mut self, native: B) -> C {
         self.state.write(&native.borrow().to_le_bytes());
         self.state.continuation()
-      }
-    }
-
-    impl From<&$view> for $native {
-      fn from(view: &$view) -> $native {
-        $native::from_le_bytes(view.le_bytes)
       }
     }
   }

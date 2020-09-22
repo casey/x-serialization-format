@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use crate::common::*;
 
 pub(crate) struct AnonymousSerializer<A: Allocator, C: Continuation<A>, T> {
