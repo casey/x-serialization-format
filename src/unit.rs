@@ -21,13 +21,13 @@ impl View for () {
 }
 
 impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for UnitSerializer<A, C> {
-  type Native = ();
+  type Input = ();
 
   fn new(state: State<A, C>) -> Self {
     UnitSerializer { state }
   }
 
-  fn serialize<B: Borrow<Self::Native>>(self, _native: B) -> C {
+  fn serialize<B: Borrow<Self::Input>>(self, _native: B) -> C {
     self.state.continuation()
   }
 }

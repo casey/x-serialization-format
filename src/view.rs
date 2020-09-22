@@ -78,13 +78,13 @@ mod tests {
     }
 
     impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for Foo {
-      type Native = Foo;
+      type Input = Foo;
 
       fn new(_: State<A, C>) -> Self {
         panic!()
       }
 
-      fn serialize<B: Borrow<Self::Native>>(self, _: B) -> C {
+      fn serialize<B: Borrow<Self::Input>>(self, _: B) -> C {
         panic!()
       }
     }

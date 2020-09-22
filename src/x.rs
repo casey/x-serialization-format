@@ -2,9 +2,18 @@ use crate::common::*;
 
 pub use x_derive::X;
 
+// pub fn get<Q: ?Sized>(&self, k: &Q) -> Option<&V>
+// where
+//     K: Borrow<Q>,
+//     Q: Hash + Eq,
+//
+//     Borrow<str> for String
+
+// pub trait X: Sized + Borrow<<Self as X>::Input> {
 pub trait X: Sized {
   type View: View;
-  type Serializer<A: Allocator, C: Continuation<A>>: Serializer<A, C, Native = Self>;
+  type Serializer<A: Allocator, C: Continuation<A>>: Serializer<A, C, Input = Self>;
+  // type Borrowed = Self;
 
   fn from_view(view: &Self::View) -> Self;
 
@@ -13,9 +22,6 @@ pub trait X: Sized {
 
     // Allocate space for the root object:
     state.push(mem::size_of::<Self::View>());
-
-    // TODO: who performs the corresponding pop? conceptually, it would be nice if
-    // the stack always ended empty.
 
     // Return the serializer:
     Self::Serializer::new(state)

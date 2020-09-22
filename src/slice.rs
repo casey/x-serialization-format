@@ -52,7 +52,7 @@ pub struct SliceSerializer<A: Allocator, C: Continuation<A>, N: X> {
 }
 
 impl<A: Allocator, C: Continuation<A>, N: X> Serializer<A, C> for SliceSerializer<A, C, N> {
-  type Native = Vec<N>;
+  type Input = Vec<N>;
 
   fn new(state: State<A, C>) -> Self {
     Self {
@@ -61,7 +61,7 @@ impl<A: Allocator, C: Continuation<A>, N: X> Serializer<A, C> for SliceSerialize
     }
   }
 
-  fn serialize<B: Borrow<Self::Native>>(self, native: B) -> C {
+  fn serialize<B: Borrow<Self::Input>>(self, native: B) -> C {
     let native = native.borrow();
     let mut serializer = self.len(native.len());
     for element in native {

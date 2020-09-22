@@ -35,13 +35,13 @@ impl View for bool {
 }
 
 impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for BoolSerializer<A, C> {
-  type Native = bool;
+  type Input = bool;
 
   fn new(state: State<A, C>) -> Self {
     BoolSerializer { state }
   }
 
-  fn serialize<B: Borrow<Self::Native>>(mut self, native: B) -> C {
+  fn serialize<B: Borrow<Self::Input>>(mut self, native: B) -> C {
     let native: bool = *native.borrow();
     // todo: document
     #[allow(clippy::needless_bool)]

@@ -41,13 +41,13 @@ pub struct CharSerializer<A: Allocator, C: Continuation<A>> {
 }
 
 impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for CharSerializer<A, C> {
-  type Native = char;
+  type Input = char;
 
   fn new(state: State<A, C>) -> Self {
     Self { state }
   }
 
-  fn serialize<B: Borrow<Self::Native>>(mut self, native: B) -> C {
+  fn serialize<B: Borrow<Self::Input>>(mut self, native: B) -> C {
     let native = native.borrow();
     let value = *native as u32;
     let bytes = value.to_le_bytes();

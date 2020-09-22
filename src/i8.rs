@@ -21,13 +21,13 @@ impl View for i8 {
 }
 
 impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for I8Serializer<A, C> {
-  type Native = i8;
+  type Input = i8;
 
   fn new(state: State<A, C>) -> Self {
     I8Serializer { state }
   }
 
-  fn serialize<B: Borrow<Self::Native>>(mut self, native: B) -> C {
+  fn serialize<B: Borrow<Self::Input>>(mut self, native: B) -> C {
     self.state.write(&native.borrow().to_le_bytes());
     self.state.continuation()
   }

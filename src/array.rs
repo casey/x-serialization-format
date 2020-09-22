@@ -35,7 +35,7 @@ impl<E: View, const SIZE: usize> View for [E; SIZE] {
 impl<A: Allocator, C: Continuation<A>, E: X, const SIZE: usize> Serializer<A, C>
   for ArraySerializer<A, C, E, SIZE>
 {
-  type Native = [E; SIZE];
+  type Input = [E; SIZE];
 
   fn new(state: State<A, C>) -> Self {
     ArraySerializer {
@@ -45,7 +45,7 @@ impl<A: Allocator, C: Continuation<A>, E: X, const SIZE: usize> Serializer<A, C>
     }
   }
 
-  fn serialize<B: Borrow<Self::Native>>(mut self, native: B) -> C {
+  fn serialize<B: Borrow<Self::Input>>(mut self, native: B) -> C {
     for element in native.borrow() {
       let element_serializer = self.element_serializer();
       self = element_serializer.serialize(element);

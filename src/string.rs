@@ -41,13 +41,13 @@ impl View for self::String {
 }
 
 impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for StringSerializer<A, C> {
-  type Native = alloc::string::String;
+  type Input = alloc::string::String;
 
   fn new(state: State<A, C>) -> Self {
     Self { state }
   }
 
-  fn serialize<B: Borrow<Self::Native>>(self, native: B) -> C {
+  fn serialize<B: Borrow<Self::Input>>(self, native: B) -> C {
     // TODO: This needs to be fixed
     let vec = native.borrow().as_bytes().to_vec();
     SliceSerializer::new(self.state).serialize(vec)

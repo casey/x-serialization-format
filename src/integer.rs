@@ -33,13 +33,13 @@ macro_rules! integer {
     }
 
     impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for $serializer<A, C> {
-      type Native = $native;
+      type Input = $native;
 
       fn new(state: State<A, C>) -> Self {
         $serializer { state }
       }
 
-      fn serialize<B: Borrow<Self::Native>>(mut self, native: B) -> C {
+      fn serialize<B: Borrow<Self::Input>>(mut self, native: B) -> C {
         self.state.write(&native.borrow().to_le_bytes());
         self.state.continuation()
       }

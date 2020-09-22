@@ -250,13 +250,13 @@ impl Tokens for Structure {
       )*
 
       impl<A: #x::Allocator, C: #x::Continuation<A>> #x::Serializer<A, C> for #first_serializer<A, C> {
-        type Native = #ident;
+        type Input = #ident;
 
         fn new(state: #x::State<A, C>) -> Self {
           Self { state }
         }
 
-        fn serialize<B: #x::core::borrow::Borrow<Self::Native>>(self, native: B) -> C {
+        fn serialize<B: #x::core::borrow::Borrow<Self::Input>>(self, native: B) -> C {
           #serialize_inner
         }
       }
@@ -313,13 +313,13 @@ mod tests {
       }
 
       impl<A: ::x::Allocator, C: ::x::Continuation<A>> ::x::Serializer<A, C> for FooSerializer<A, C> {
-        type Native = Foo;
+        type Input = Foo;
 
         fn new(state: ::x::State<A, C>) -> Self {
           Self { state }
         }
 
-        fn serialize<B: ::x::core::borrow::Borrow<Self::Native>>(self, native: B) -> C {
+        fn serialize<B: ::x::core::borrow::Borrow<Self::Input>>(self, native: B) -> C {
           self.state.continuation()
         }
       }
@@ -416,13 +416,13 @@ mod tests {
       }
 
       impl<A: ::x::Allocator, C: ::x::Continuation<A>> ::x::Serializer<A, C> for FooSerializer<A, C> {
-        type Native = Foo;
+        type Input = Foo;
 
         fn new(state: ::x::State<A, C>) -> Self {
           Self { state }
         }
 
-        fn serialize<B: ::x::core::borrow::Borrow<Self::Native>>(self, native: B) -> C {
+        fn serialize<B: ::x::core::borrow::Borrow<Self::Input>>(self, native: B) -> C {
           let native = native.borrow();
 
           self
@@ -524,13 +524,13 @@ mod tests {
       }
 
       impl<A: ::x::Allocator, C: ::x::Continuation<A>> ::x::Serializer<A, C> for FooSerializer<A, C> {
-        type Native = Foo;
+        type Input = Foo;
 
         fn new(state: ::x::State<A, C>) -> Self {
           Self { state }
         }
 
-        fn serialize<B: ::x::core::borrow::Borrow<Self::Native>>(self, native: B) -> C {
+        fn serialize<B: ::x::core::borrow::Borrow<Self::Input>>(self, native: B) -> C {
           let native = native.borrow();
 
           self

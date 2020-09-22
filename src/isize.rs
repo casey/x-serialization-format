@@ -52,13 +52,13 @@ pub struct IsizeSerializer<A: Allocator, C: Continuation<A>> {
 }
 
 impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for IsizeSerializer<A, C> {
-  type Native = isize;
+  type Input = isize;
 
   fn new(state: State<A, C>) -> Self {
     Self { state }
   }
 
-  fn serialize<B: Borrow<Self::Native>>(self, native: B) -> C {
+  fn serialize<B: Borrow<Self::Input>>(self, native: B) -> C {
     let native = native.borrow();
     I64Serializer::new(self.state).serialize(native.to_i64())
   }
