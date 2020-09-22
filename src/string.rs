@@ -9,6 +9,7 @@ pub struct StringSerializer<A: Allocator, C: Continuation<A>> {
 }
 
 impl X for alloc::string::String {
+  type Borrowed = str;
   type Serializer<A: Allocator, C: Continuation<A>> = StringSerializer<A, C>;
   type View = self::String;
 
@@ -41,7 +42,7 @@ impl View for self::String {
 }
 
 impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for StringSerializer<A, C> {
-  type Input = alloc::string::String;
+  type Input = str;
 
   fn new(state: State<A, C>) -> Self {
     Self { state }

@@ -1,6 +1,7 @@
 use crate::common::*;
 
 impl<N: X> X for Vec<N> {
+  type Borrowed = [N];
   type Serializer<A: Allocator, C: Continuation<A>> = SliceSerializer<A, C, N>;
   type View = Slice<N::View>;
 
@@ -52,7 +53,7 @@ pub struct SliceSerializer<A: Allocator, C: Continuation<A>, N: X> {
 }
 
 impl<A: Allocator, C: Continuation<A>, N: X> Serializer<A, C> for SliceSerializer<A, C, N> {
-  type Input = Vec<N>;
+  type Input = [N];
 
   fn new(state: State<A, C>) -> Self {
     Self {
@@ -65,7 +66,7 @@ impl<A: Allocator, C: Continuation<A>, N: X> Serializer<A, C> for SliceSerialize
     let native = native.borrow();
     let mut serializer = self.len(native.len());
     for element in native {
-      serializer = serializer.element(element);
+      serializer = serializer.element(element.borrow());
     }
     serializer.end()
   }
@@ -96,7 +97,7 @@ pub struct AllocatedSliceSerializer<A: Allocator, C: Continuation<A>, N: X> {
 }
 
 impl<A: Allocator, C: Continuation<A>, N: X> AllocatedSliceSerializer<A, C, N> {
-  fn element<B: Borrow<N>>(self, native: B) -> Self {
+  fn element<B: Borrow<N::Borrowed>>(self, native: B) -> Self {
     self.element_serializer().serialize(native)
   }
 

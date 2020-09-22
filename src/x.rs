@@ -9,11 +9,10 @@ pub use x_derive::X;
 //
 //     Borrow<str> for String
 
-// pub trait X: Sized + Borrow<<Self as X>::Input> {
-pub trait X: Sized {
+pub trait X: Sized + Borrow<<Self as X>::Borrowed> {
   type View: View;
-  type Serializer<A: Allocator, C: Continuation<A>>: Serializer<A, C, Input = Self>;
-  // type Borrowed = Self;
+  type Serializer<A: Allocator, C: Continuation<A>>: Serializer<A, C, Input = Self::Borrowed>;
+  type Borrowed: ?Sized = Self;
 
   fn from_view(view: &Self::View) -> Self;
 
@@ -38,7 +37,9 @@ pub trait X: Sized {
 
   #[cfg(feature = "alloc")]
   fn serialize_to_vec(&self) -> Vec<u8> {
-    Self::store(VecAllocator::new()).serialize(self).done()
+    Self::store(VecAllocator::new())
+      .serialize(self.borrow())
+      .done()
   }
 
   fn view(buffer: &[u8]) -> Result<&Self::View> {

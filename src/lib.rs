@@ -60,8 +60,8 @@ extern crate alloc;
 extern crate std;
 
 mod allocator;
-mod anonymous_serializer;
-mod array;
+// mod anonymous_serializer;
+// mod array;
 mod bool;
 mod char;
 mod common;
