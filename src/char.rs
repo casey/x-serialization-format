@@ -16,8 +16,6 @@ pub struct Char {
 }
 
 impl View for Char {
-  type Native = char;
-
   fn check<'value>(suspect: &'value MaybeUninit<Self>, _buffer: &[u8]) -> Result<&'value Self> {
     // Safe: There are no bitpattern validity requirements for Self
     let value = unsafe { suspect.assume_init_ref() };

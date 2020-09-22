@@ -212,8 +212,6 @@ impl Tokens for Structure {
       #view_getters
 
       impl #x::View for #view {
-        type Native = #ident;
-
         fn check<'value>(
           suspect: &'value #x::core::mem::MaybeUninit<Self>,
           buffer: &[u8],
@@ -301,8 +299,6 @@ mod tests {
       struct FooView;
 
       impl ::x::View for FooView {
-        type Native = Foo;
-
         fn check<'value>(
           suspect: &'value ::x::core::mem::MaybeUninit<Self>,
           buffer: &[u8],
@@ -368,8 +364,6 @@ mod tests {
       }
 
       impl ::x::View for FooView {
-        type Native = Foo;
-
         fn check<'value>(
           suspect: &'value ::x::core::mem::MaybeUninit<Self>,
           buffer: &[u8],
@@ -478,8 +472,6 @@ mod tests {
       }
 
       impl ::x::View for FooView {
-        type Native = Foo;
-
         fn check<'value>(
           suspect: &'value ::x::core::mem::MaybeUninit<Self>,
           buffer: &[u8],

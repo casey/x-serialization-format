@@ -15,7 +15,7 @@ watch +ARGS='':
 	cargo +nightly watch \
 		--clear \
 		--shell \
-		'cargo +nightly test --all {{ARGS}} --color always 2>&1 | bat --plain --paging always'
+		'cargo +nightly test --all --color always {{ARGS}} -- --color always 2>&1 | sed s///g | bat --plain --paging always'
 
 push:
 	! git branch | grep '* master'

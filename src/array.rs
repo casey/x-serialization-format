@@ -16,8 +16,6 @@ impl<E: X, const SIZE: usize> X for [E; SIZE] {
 }
 
 impl<E: View, const SIZE: usize> View for [E; SIZE] {
-  type Native = [E::Native; SIZE];
-
   fn check<'value>(suspect: &'value MaybeUninit<Self>, buffer: &[u8]) -> Result<&'value Self> {
     let pointer: *const [E; SIZE] = suspect.as_ptr();
 

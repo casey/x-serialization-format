@@ -14,8 +14,6 @@ impl X for i8 {
 }
 
 impl View for i8 {
-  type Native = i8;
-
   fn check<'value>(suspect: &'value MaybeUninit<Self>, _buffer: &[u8]) -> Result<&'value Self> {
     // All bit patterns of the correct size are valid values of type Self.
     Ok(unsafe { suspect.assume_init_ref() })

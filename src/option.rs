@@ -23,8 +23,6 @@ pub enum Option<V: View> {
 }
 
 impl<V: View> View for self::Option<V> {
-  type Native = core::option::Option<V::Native>;
-
   fn check<'value>(suspect: &'value MaybeUninit<Self>, buffer: &[u8]) -> Result<&'value Self> {
     let pointer = suspect.as_ptr() as *const u8;
 

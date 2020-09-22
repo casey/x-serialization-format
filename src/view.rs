@@ -1,8 +1,6 @@
 use crate::common::*;
 
 pub trait View: Sized {
-  type Native: X;
-
   fn to_native<N>(&self) -> N
   where
     N: X<View = Self>,
@@ -74,8 +72,6 @@ mod tests {
     }
 
     impl View for Foo {
-      type Native = Foo;
-
       fn check<'value>(_: &'value MaybeUninit<Self>, _: &[u8]) -> Result<&'value Self> {
         panic!()
       }

@@ -15,8 +15,6 @@ pub struct Isize {
 }
 
 impl View for Isize {
-  type Native = isize;
-
   fn check<'value>(suspect: &'value MaybeUninit<Self>, buffer: &[u8]) -> Result<&'value Self> {
     let struct_pointer: *const Isize = suspect.as_ptr();
 

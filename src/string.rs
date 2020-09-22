@@ -28,8 +28,6 @@ impl self::String {
 }
 
 impl View for self::String {
-  type Native = alloc::string::String;
-
   fn check<'value>(suspect: &'value MaybeUninit<Self>, buffer: &[u8]) -> Result<&'value Self> {
     let slice = suspect.cast::<Slice<u8>>();
     View::check(slice, buffer)?;

@@ -23,8 +23,6 @@ pub enum Result<T: View, E: View> {
 }
 
 impl<T: View, E: View> View for self::Result<T, E> {
-  type Native = core::result::Result<T::Native, E::Native>;
-
   fn check<'value>(
     suspect: &'value MaybeUninit<Self>,
     buffer: &[u8],

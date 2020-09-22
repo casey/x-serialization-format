@@ -14,8 +14,6 @@ impl X for () {
 }
 
 impl View for () {
-  type Native = ();
-
   fn check<'value>(suspect: &'value MaybeUninit<Self>, _buffer: &[u8]) -> Result<&'value Self> {
     // Safe because the unit type has no invalid bit patterns.
     Ok(unsafe { suspect.assume_init_ref() })
