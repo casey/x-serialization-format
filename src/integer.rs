@@ -46,6 +46,12 @@ macro_rules! integer {
         self.state.continuation()
       }
     }
+
+    impl From<&$view> for $native {
+      fn from(view: &$view) -> $native {
+        $native::from_le_bytes(view.le_bytes)
+      }
+    }
   }
 }
 
