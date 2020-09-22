@@ -7,6 +7,10 @@ pub struct I8Serializer<A: Allocator, C: Continuation<A>> {
 impl X for i8 {
   type Serializer<A: Allocator, C: Continuation<A>> = I8Serializer<A, C>;
   type View = i8;
+
+  fn from_view(view: &Self::View) -> Self {
+    *view
+  }
 }
 
 impl View for i8 {

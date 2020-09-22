@@ -200,6 +200,10 @@ impl Tokens for Structure {
       impl #x::X for #ident {
         type View = #view;
         type Serializer<A: #x::Allocator, C: #x::Continuation<A>> = #first_serializer<A, C>;
+
+        fn from_view(view: &Self::View) -> Self {
+          panic!()
+        }
       }
 
       #[repr(C)]

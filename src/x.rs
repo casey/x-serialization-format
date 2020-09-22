@@ -2,9 +2,11 @@ use crate::common::*;
 
 pub use x_derive::X;
 
-pub trait X {
+pub trait X: Sized {
   type View: View<Native = Self>;
   type Serializer<A: Allocator, C: Continuation<A>>: Serializer<A, C, Native = Self>;
+
+  fn from_view(view: &Self::View) -> Self;
 
   fn store<A: Allocator>(allocator: A) -> Self::Serializer<A, Done<A>> {
     let mut state = State::new(allocator, ());

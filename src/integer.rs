@@ -19,6 +19,10 @@ macro_rules! integer {
     impl X for $native {
       type Serializer<A: Allocator, C: Continuation<A>> = $serializer<A, C>;
       type View = $view;
+
+      fn from_view(view: &Self::View) -> Self {
+        Self::from_le_bytes(view.le_bytes)
+      }
     }
 
     impl View for $view {

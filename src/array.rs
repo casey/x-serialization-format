@@ -9,6 +9,10 @@ pub struct ArraySerializer<A: Allocator, C: Continuation<A>, E, const SIZE: usiz
 impl<E: X, const SIZE: usize> X for [E; SIZE] {
   type Serializer<A: Allocator, C: Continuation<A>> = ArraySerializer<A, C, E, SIZE>;
   type View = [E::View; SIZE];
+
+  fn from_view(view: &Self::View) -> Self {
+    todo!()
+  }
 }
 
 impl<E: View, const SIZE: usize> View for [E; SIZE] {

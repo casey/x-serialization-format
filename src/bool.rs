@@ -3,6 +3,10 @@ use crate::common::*;
 impl X for bool {
   type Serializer<A: Allocator, C: Continuation<A>> = BoolSerializer<A, C>;
   type View = bool;
+
+  fn from_view(view: &Self::View) -> Self {
+    *view
+  }
 }
 
 pub struct BoolSerializer<A: Allocator, C: Continuation<A>> {

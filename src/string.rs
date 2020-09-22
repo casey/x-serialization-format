@@ -11,6 +11,10 @@ pub struct StringSerializer<A: Allocator, C: Continuation<A>> {
 impl X for alloc::string::String {
   type Serializer<A: Allocator, C: Continuation<A>> = StringSerializer<A, C>;
   type View = self::String;
+
+  fn from_view(view: &Self::View) -> Self {
+    view.as_str().into()
+  }
 }
 
 impl self::String {

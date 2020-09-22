@@ -3,6 +3,13 @@ use crate::common::*;
 impl<T: X, E: X> X for core::result::Result<T, E> {
   type Serializer<A: Allocator, C: Continuation<A>> = ResultSerializer<A, C, T::View, E::View>;
   type View = self::Result<T::View, E::View>;
+
+  fn from_view(view: &Self::View) -> Self {
+    match view {
+      self::Result::Ok(t) => core::result::Result::Ok(X::from_view(t)),
+      self::Result::Err(e) => core::result::Result::Err(X::from_view(e)),
+    }
+  }
 }
 
 const OK_DISCRIMINANT: u8 = 0;

@@ -3,6 +3,10 @@ use crate::common::*;
 impl<N: X> X for Vec<N> {
   type Serializer<A: Allocator, C: Continuation<A>> = SliceSerializer<A, C, N>;
   type View = Slice<N::View>;
+
+  fn from_view(view: &Self::View) -> Self {
+    view.as_slice().iter().map(X::from_view).collect()
+  }
 }
 
 #[repr(C)]

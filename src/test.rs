@@ -4,7 +4,7 @@ pub(crate) fn ok<Native: X + Eq + Debug>(native: Native, want: &[u8]) {
   let have = native.serialize_to_vec();
   assert_eq!(have, want);
   let view = Native::view(&have).unwrap();
-  let round_tripped = view.to_native();
+  let round_tripped = Native::from_view(view);
   assert_eq!(native, round_tripped);
 }
 

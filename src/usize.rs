@@ -3,6 +3,10 @@ use crate::common::*;
 impl X for usize {
   type Serializer<A: Allocator, C: Continuation<A>> = UsizeSerializer<A, C>;
   type View = Usize;
+
+  fn from_view(view: &Self::View) -> Self {
+    u64::from_view(&view.inner) as usize
+  }
 }
 
 #[repr(C)]

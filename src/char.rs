@@ -3,6 +3,10 @@ use crate::common::*;
 impl X for char {
   type Serializer<A: Allocator, C: Continuation<A>> = CharSerializer<A, C>;
   type View = Char;
+
+  fn from_view(view: &Self::View) -> Self {
+    char::from_u32(view.scalar()).unwrap()
+  }
 }
 
 #[repr(C)]

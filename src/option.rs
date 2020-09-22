@@ -3,6 +3,13 @@ use crate::common::*;
 impl<N: X> X for core::option::Option<N> {
   type Serializer<A: Allocator, C: Continuation<A>> = OptionSerializer<A, C, N::View>;
   type View = self::Option<N::View>;
+
+  fn from_view(view: &Self::View) -> Self {
+    match view {
+      self::Option::None => None,
+      self::Option::Some(t) => Some(X::from_view(t)),
+    }
+  }
 }
 
 const NONE_DISCRIMINANT: u8 = 0;

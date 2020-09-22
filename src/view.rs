@@ -62,6 +62,10 @@ mod tests {
     impl X for Foo {
       type Serializer<A: Allocator, C: Continuation<A>> = Foo;
       type View = Foo;
+
+      fn from_view(view: &Self::View) -> Self {
+        panic!()
+      }
     }
 
     impl View for Foo {
