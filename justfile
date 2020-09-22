@@ -12,6 +12,9 @@ export RUST_LOG := log
 
 # watch filesystem for changes and rerun tests
 watch +ARGS='':
+	cargo +nightly watch --clear --shell 'cargo +nightly test --all {{ARGS}}'
+
+watch-pager +ARGS='':
 	cargo +nightly watch \
 		--clear \
 		--shell \

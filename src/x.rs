@@ -2,18 +2,15 @@ use crate::common::*;
 
 pub use x_derive::X;
 
-// pub fn get<Q: ?Sized>(&self, k: &Q) -> Option<&V>
-// where
-//     K: Borrow<Q>,
-//     Q: Hash + Eq,
-//
-//     Borrow<str> for String
-
+// TODO: I'm using borrow here just so I can pass T and &T to serializers. Is
+// there a better way?
 pub trait X: Sized + Borrow<<Self as X>::Borrowed> {
   type View: View;
+  // TODO: Move serializer into view
   type Serializer<A: Allocator, C: Continuation<A>>: Serializer<A, C, Input = Self::Borrowed>;
   type Borrowed: ?Sized = Self;
 
+  // TODO: Remove this
   fn from_view(view: &Self::View) -> Self;
 
   fn store<A: Allocator>(allocator: A) -> Self::Serializer<A, Done<A>> {

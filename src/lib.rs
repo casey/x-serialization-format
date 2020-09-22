@@ -8,7 +8,7 @@
 #![feature(raw_ref_op)]
 #![feature(try_reserve)]
 #![allow(incomplete_features)]
-//! Foo;
+#![allow(unused)] // TODO: Remove this
 
 // traits
 pub use crate::{
@@ -82,7 +82,7 @@ mod serializer;
 mod slice;
 mod slice_allocator;
 mod state;
-mod string;
+mod str;
 mod to_i64;
 mod to_u64;
 mod u8;
@@ -90,6 +90,9 @@ mod unit;
 mod usize;
 mod view;
 mod x;
+
+#[cfg(feature = "alloc")]
+mod alloc_impls;
 
 #[cfg(feature = "alloc")]
 mod vec_allocator;

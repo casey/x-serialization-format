@@ -8,6 +8,15 @@ pub trait View: Sized {
     N::from_view(self)
   }
 
+  // TODO: this is a simpler impl that doesn't rely on X::from_view. Use it or
+  // delete it.
+  fn to_native_prime<'a, N>(&'a self) -> N
+  where
+    N: X<View = Self> + From<&'a Self>,
+  {
+    self.into()
+  }
+
   fn load(buffer: &[u8]) -> Result<&Self> {
     let unchecked = Self::cast(buffer, 0)?;
 

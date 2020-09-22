@@ -1,12 +1,29 @@
 use crate::common::*;
 
-impl<N: X> X for Vec<N> {
+// TODO:
+// This issue does not concern no-alloc deserialization. This just concerns the
+// way that native types can be declared. This is a problem becasue no-alloc
+// users need to declare variable length sequences, but don't have Vec or String
+// at hand
+//
+// Option:
+// - add a new FromView trait
+// - View::to_native is implemented in terms of this trait
+// - (or just reuse From/Into)?
+//
+// Users can declare whether or not their type should get a FromView impl.
+//
+// Only works if all fields impl FromView, otherwise fails.
+//
+// Things like Vec<N> get FromView. &[N] does not.
+
+impl<'a, N: X> X for &'a [N] {
   type Borrowed = [N];
   type Serializer<A: Allocator, C: Continuation<A>> = SliceSerializer<A, C, N>;
   type View = Slice<N::View>;
 
   fn from_view(view: &Self::View) -> Self {
-    view.as_slice().iter().map(X::from_view).collect()
+    todo!()
   }
 }
 

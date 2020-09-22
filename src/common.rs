@@ -29,6 +29,7 @@ pub(crate) use crate::{
   slice::{Slice, SliceSerializer},
   slice_allocator::SliceAllocator,
   state::State,
+  str::{Str, StrSerializer},
   usize::Usize,
 };
 
@@ -38,7 +39,7 @@ pub(crate) use crate::Result;
 #[cfg(feature = "alloc")]
 mod alloc {
   // dependencies
-  pub(crate) use ::alloc::{collections::TryReserveError, vec::Vec};
+  pub(crate) use ::alloc::{collections::TryReserveError, string::String, vec::Vec};
 
   // traits
   pub(crate) use crate::vec_ext::VecExt;

@@ -1,24 +1,14 @@
 use crate::common::*;
 
-pub struct String {
+pub struct Str {
   slice: Slice<u8>,
 }
 
-pub struct StringSerializer<A: Allocator, C: Continuation<A>> {
+pub struct StrSerializer<A: Allocator, C: Continuation<A>> {
   state: State<A, C>,
 }
 
-impl X for alloc::string::String {
-  type Borrowed = str;
-  type Serializer<A: Allocator, C: Continuation<A>> = StringSerializer<A, C>;
-  type View = self::String;
-
-  fn from_view(view: &Self::View) -> Self {
-    view.as_str().into()
-  }
-}
-
-impl self::String {
+impl Str {
   pub fn as_str(&self) -> &str {
     self.try_as_str().unwrap()
   }
@@ -28,7 +18,13 @@ impl self::String {
   }
 }
 
-impl View for self::String {
+impl<'a> From<&'a Str> for &'a str {
+  fn from(view: &'a Str) -> Self {
+    view.try_as_str().unwrap()
+  }
+}
+
+impl View for Str {
   fn check<'value>(suspect: &'value MaybeUninit<Self>, buffer: &[u8]) -> Result<&'value Self> {
     let slice = suspect.cast::<Slice<u8>>();
     View::check(slice, buffer)?;
@@ -41,7 +37,7 @@ impl View for self::String {
   }
 }
 
-impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for StringSerializer<A, C> {
+impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for StrSerializer<A, C> {
   type Input = str;
 
   fn new(state: State<A, C>) -> Self {
@@ -62,14 +58,14 @@ mod tests {
   #[test]
   #[rustfmt::skip]
   fn basic() {
-    ok(alloc::string::String::new(), &[
+    ok(String::new(), &[
       // offset
       16, 0, 0, 0, 0, 0, 0, 0,
       // length
       0, 0, 0, 0, 0, 0, 0, 0,
     ]);
 
-    ok(alloc::string::String::from("\0"), &[
+    ok(String::from("\0"), &[
       // offset
       16, 0, 0, 0, 0, 0, 0, 0,
       // length
@@ -78,7 +74,7 @@ mod tests {
       0,
     ]);
 
-    ok(alloc::string::String::from("hello"), &[
+    ok(String::from("hello"), &[
       // offset
       16, 0, 0, 0, 0, 0, 0, 0,
       // length
