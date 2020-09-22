@@ -3,6 +3,13 @@ use crate::common::*;
 pub trait View: Sized {
   type Native: X;
 
+  fn to_native<N>(&self) -> N
+  where
+    N: X<View = Self>,
+  {
+    N::from_view(self)
+  }
+
   fn load(buffer: &[u8]) -> Result<&Self> {
     let unchecked = Self::cast(buffer, 0)?;
 

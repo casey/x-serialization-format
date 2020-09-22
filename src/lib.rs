@@ -84,7 +84,6 @@ mod slice_allocator;
 mod state;
 mod string;
 mod to_i64;
-mod to_native;
 mod to_u64;
 mod u8;
 mod unit;
