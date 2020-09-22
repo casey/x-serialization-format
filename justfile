@@ -12,7 +12,10 @@ export RUST_LOG := log
 
 # watch filesystem for changes and rerun tests
 watch +ARGS='':
-	cargo +nightly watch --clear --exec 'test --all {{ARGS}}'
+	cargo +nightly watch \
+		--clear \
+		--shell \
+		'cargo +nightly test --all {{ARGS}} --color always 2>&1 | bat --plain --paging always'
 
 push:
 	! git branch | grep '* master'
