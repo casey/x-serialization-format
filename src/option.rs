@@ -1,13 +1,31 @@
 use crate::common::*;
 
 impl<N: X> X for core::option::Option<N> {
-  type Serializer<A: Allocator, C: Continuation<A>> = OptionSerializer<A, C, N::View>;
   type View = self::Option<N::View>;
 
-  fn from_view(view: &Self::View) -> Self {
-    match view {
-      self::Option::None => None,
-      self::Option::Some(t) => Some(X::from_view(t)),
+  fn serialize<A: Allocator, C: Continuation<A>>(
+    &self,
+    mut serializer: Self::Serializer<A, C>,
+  ) -> C {
+    match self {
+      None => {
+        assert_eq!(NONE_DISCRIMINANT, 0);
+        // We take advantage of the fact that None's discriminant is zero, and just emit
+        // a fully zeroed value:
+        let mut value = self::Option::<N::View>::None;
+        unsafe { ptr::write_bytes(&mut value, 0, 1) };
+        let pointer: *const self::Option<N::View> = &value;
+        let pointer = pointer as *const u8;
+        let bytes: &[u8] =
+          unsafe { slice::from_raw_parts(pointer, mem::size_of::<self::Option<N::View>>()) };
+
+        serializer.state.write(bytes);
+        serializer.state.continuation()
+      },
+      Some(t) => {
+        serializer.state.write(&[SOME_DISCRIMINANT]);
+        N::Serializer::new(serializer.state).serialize(t)
+      },
     }
   }
 }
@@ -23,6 +41,8 @@ pub enum Option<V: View> {
 }
 
 impl<V: View> View for self::Option<V> {
+  type Serializer<A: Allocator, C: Continuation<A>> = OptionSerializer<A, C, V>;
+
   fn check<'value>(suspect: &'value MaybeUninit<Self>, buffer: &[u8]) -> Result<&'value Self> {
     let pointer = suspect.as_ptr() as *const u8;
 
@@ -50,35 +70,19 @@ pub struct OptionSerializer<A: Allocator, C: Continuation<A>, V: View> {
 }
 
 impl<A: Allocator, C: Continuation<A>, V: View> Serializer<A, C> for OptionSerializer<A, C, V> {
-  type Native = core::option::Option<V::Native>;
-
   fn new(state: State<A, C>) -> Self {
     Self {
       data: PhantomData,
       state,
     }
   }
+}
 
-  fn serialize<B: Borrow<Self::Native>>(mut self, native: B) -> C {
-    match native.borrow() {
-      None => {
-        assert_eq!(NONE_DISCRIMINANT, 0);
-        // We take advantage of the fact that None's discriminant is zero, and just emit
-        // a fully zeroed value:
-        let mut value = self::Option::<V>::None;
-        unsafe { ptr::write_bytes(&mut value, 0, 1) };
-        let pointer: *const self::Option<V> = &value;
-        let pointer = pointer as *const u8;
-        let bytes: &[u8] =
-          unsafe { slice::from_raw_parts(pointer, mem::size_of::<self::Option<V>>()) };
-
-        self.state.write(bytes);
-        self.state.continuation()
-      },
-      Some(t) => {
-        self.state.write(&[SOME_DISCRIMINANT]);
-        <V::Native as X>::Serializer::new(self.state).serialize(t)
-      },
+impl<T: X + FromView> FromView for core::option::Option<T> {
+  fn from_view(view: &Self::View) -> Self {
+    match view {
+      self::Option::None => None,
+      self::Option::Some(t) => Some(FromView::from_view(t)),
     }
   }
 }

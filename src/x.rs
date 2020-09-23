@@ -3,6 +3,7 @@ use crate::common::*;
 pub use x_derive::X;
 
 // TODO: Implement from &View for all applicable types
+// TODO: Can I get both ref and value working for serialize methods?
 pub trait X: Sized {
   type View: View;
 
@@ -40,3 +41,15 @@ pub trait X: Sized {
     Self::View::load(buffer)
   }
 }
+
+// TODO: I want this blanket impl, so references to types also implement X, but
+// I ran into a compiler ICE after I switched code over to use it.
+
+// impl<T: X> X for &T {
+// type Serializer<A: Allocator, C: Continuation<A>> = <T as X>::Serializer<A,
+// C>; type View = <T as X>::View;
+//
+// fn serialize<A: Allocator, C: Continuation<A>>(&self, serializer:
+// Self::Serializer<A, C>) -> C { <T as X>::serialize(*self, serializer)
+// }
+// }

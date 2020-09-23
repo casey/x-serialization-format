@@ -3,13 +3,8 @@ use crate::common::*;
 pub trait View: Sized {
   type Serializer<A: Allocator, C: Continuation<A>>: Serializer<A, C>;
 
-  // TODO: this is a simpler impl that doesn't rely on X::from_view. Use it or
-  // delete it.
-  fn to_native<'a, N>(&'a self) -> N
-  where
-    N: X<View = Self> + From<&'a Self>,
-  {
-    self.into()
+  fn to_native<N: X<View = Self> + FromView>(&self) -> N {
+    N::from_view(self)
   }
 
   fn load(buffer: &[u8]) -> Result<&Self> {

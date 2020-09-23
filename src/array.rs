@@ -7,15 +7,23 @@ pub struct ArraySerializer<A: Allocator, C: Continuation<A>, E, const SIZE: usiz
 }
 
 impl<E: X, const SIZE: usize> X for [E; SIZE] {
-  type Serializer<A: Allocator, C: Continuation<A>> = ArraySerializer<A, C, E, SIZE>;
   type View = [E::View; SIZE];
 
-  fn from_view(_view: &Self::View) -> Self {
-    todo!()
+  fn serialize<A: Allocator, C: Continuation<A>>(
+    &self,
+    mut serializer: Self::Serializer<A, C>,
+  ) -> C {
+    for element in self {
+      serializer = serializer.element_serializer::<E>().serialize(element);
+    }
+
+    serializer.done()
   }
 }
 
 impl<E: View, const SIZE: usize> View for [E; SIZE] {
+  type Serializer<A: Allocator, C: Continuation<A>> = ArraySerializer<A, C, E, SIZE>;
+
   fn check<'value>(suspect: &'value MaybeUninit<Self>, buffer: &[u8]) -> Result<&'value Self> {
     let pointer: *const [E; SIZE] = suspect.as_ptr();
 
@@ -32,11 +40,9 @@ impl<E: View, const SIZE: usize> View for [E; SIZE] {
   }
 }
 
-impl<A: Allocator, C: Continuation<A>, E: X, const SIZE: usize> Serializer<A, C>
+impl<A: Allocator, C: Continuation<A>, E: View, const SIZE: usize> Serializer<A, C>
   for ArraySerializer<A, C, E, SIZE>
 {
-  type Input = [E; SIZE];
-
   fn new(state: State<A, C>) -> Self {
     ArraySerializer {
       element: PhantomData,
@@ -44,18 +50,12 @@ impl<A: Allocator, C: Continuation<A>, E: X, const SIZE: usize> Serializer<A, C>
       state,
     }
   }
-
-  fn serialize<B: Borrow<Self::Input>>(mut self, native: B) -> C {
-    for element in native.borrow() {
-      let element_serializer = self.element_serializer();
-      self = element_serializer.serialize(element);
-    }
-    self.state.continuation()
-  }
 }
 
-impl<A: Allocator, C: Continuation<A>, E: X, const SIZE: usize> ArraySerializer<A, C, E, SIZE> {
-  pub fn element_serializer(self) -> <E as X>::Serializer<A, ArraySerializer<A, C, E, SIZE>> {
+impl<A: Allocator, C: Continuation<A>, E: View, const SIZE: usize> ArraySerializer<A, C, E, SIZE> {
+  pub fn element_serializer<N: X<View = E>>(
+    self,
+  ) -> N::Serializer<A, ArraySerializer<A, C, E, SIZE>> {
     if self.serialized == SIZE {
       todo!()
     }
@@ -66,11 +66,11 @@ impl<A: Allocator, C: Continuation<A>, E: X, const SIZE: usize> ArraySerializer<
       .state
       .transform(|inner| ArraySeed { serialized, inner });
 
-    <E as X>::Serializer::new(state)
+    N::Serializer::new(state)
   }
 
-  pub fn element<B: Borrow<E>>(self, element: B) -> Self {
-    self.element_serializer().serialize(element)
+  pub fn element<N: X<View = E>>(self, element: N) -> Self {
+    self.element_serializer::<N>().serialize(&element)
   }
 
   pub fn done(self) -> C {
@@ -82,7 +82,7 @@ impl<A: Allocator, C: Continuation<A>, E: X, const SIZE: usize> ArraySerializer<
   }
 }
 
-impl<A: Allocator, C: Continuation<A>, E: X, const SIZE: usize> Continuation<A>
+impl<A: Allocator, C: Continuation<A>, E: View, const SIZE: usize> Continuation<A>
   for ArraySerializer<A, C, E, SIZE>
 {
   type Seed = ArraySeed<A, C>;
@@ -111,7 +111,13 @@ mod tests {
   fn serialize() {
     type Native = [u8; 2];
 
-    let have = Native::store_to_vec().element(0).element(1).done().done();
+    // TODO: It sucks that I now have to use type inference. Can I have a default
+    // type to avoid this?
+    let have = Native::store_to_vec()
+      .element(0u8)
+      .element(1u8)
+      .done()
+      .done();
 
     assert_eq!(have, &[0, 1]);
   }
