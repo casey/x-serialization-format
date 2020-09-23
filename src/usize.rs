@@ -1,21 +1,26 @@
 use crate::common::*;
 
-impl X for usize {
-  type Serializer<A: Allocator, C: Continuation<A>> = UsizeSerializer<A, C>;
-  type View = Usize;
-
-  fn from_view(view: &Self::View) -> Self {
-    u64::from_view(&view.inner) as usize
-  }
-}
-
 #[repr(C)]
 #[derive(Debug)]
 pub struct Usize {
   inner: U64,
 }
 
+impl X for usize {
+  type View = Usize;
+
+  fn from_view(view: &Self::View) -> Self {
+    u64::from_view(&view.inner) as usize
+  }
+
+  fn serialize<A: Allocator, C: Continuation<A>>(&self, serializer: Self::Serializer<A, C>) -> C {
+    U64Serializer::new(serializer.state).serialize(&self.to_u64())
+  }
+}
+
 impl View for Usize {
+  type Serializer<A: Allocator, C: Continuation<A>> = UsizeSerializer<A, C>;
+
   fn check<'value>(suspect: &'value MaybeUninit<Self>, buffer: &[u8]) -> Result<&'value Self> {
     let struct_pointer: *const Usize = suspect.as_ptr();
 
@@ -53,15 +58,8 @@ pub struct UsizeSerializer<A: Allocator, C: Continuation<A>> {
 }
 
 impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for UsizeSerializer<A, C> {
-  type Input = usize;
-
   fn new(state: State<A, C>) -> Self {
     Self { state }
-  }
-
-  fn serialize<B: Borrow<Self::Input>>(self, native: B) -> C {
-    let native = native.borrow();
-    U64Serializer::new(self.state).serialize(native.to_u64())
   }
 }
 

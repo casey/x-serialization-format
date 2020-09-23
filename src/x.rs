@@ -4,11 +4,12 @@ pub use x_derive::X;
 
 // TODO: I'm using borrow here just so I can pass T and &T to serializers. Is
 // there a better way?
-pub trait X: Sized + Borrow<<Self as X>::Borrowed> {
+pub trait X: Sized {
   type View: View;
-  // TODO: Move serializer into view
-  type Serializer<A: Allocator, C: Continuation<A>>: Serializer<A, C, Input = Self::Borrowed>;
-  type Borrowed: ?Sized = Self;
+
+  // This just avoids a lot of nasty typing
+  type Serializer<A: Allocator, C: Continuation<A>>: Serializer<A, C> =
+    <<Self as X>::View as View>::Serializer<A, C>;
 
   // TODO: Remove this
   fn from_view(view: &Self::View) -> Self;
@@ -23,6 +24,8 @@ pub trait X: Sized + Borrow<<Self as X>::Borrowed> {
     Self::Serializer::new(state)
   }
 
+  fn serialize<A: Allocator, C: Continuation<A>>(&self, serializer: Self::Serializer<A, C>) -> C;
+
   fn store_to_slice(slice: &mut [u8]) -> Self::Serializer<SliceAllocator, Done<SliceAllocator>> {
     Self::store(SliceAllocator::new(slice))
   }
@@ -34,9 +37,7 @@ pub trait X: Sized + Borrow<<Self as X>::Borrowed> {
 
   #[cfg(feature = "alloc")]
   fn serialize_to_vec(&self) -> Vec<u8> {
-    Self::store(VecAllocator::new())
-      .serialize(self.borrow())
-      .done()
+    Self::store(VecAllocator::new()).serialize(self).done()
   }
 
   fn view(buffer: &[u8]) -> Result<&Self::View> {

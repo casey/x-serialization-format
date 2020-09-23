@@ -16,24 +16,26 @@ pub use crate::{
 };
 
 // structs and enums
-pub use crate::{
-  char::{Char, CharSerializer},
-  done::Done,
-  error::Error,
-  slice_allocator::SliceAllocator,
-  state::State,
-  usize::{Usize, UsizeSerializer},
-};
+// pub use crate::{
+//   char::{Char, CharSerializer},
+//   done::Done,
+//   error::Error,
+//   slice_allocator::SliceAllocator,
+//   state::State,
+//   usize::{Usize, UsizeSerializer},
+// };
+
+pub use crate::{done::Done, error::Error, slice_allocator::SliceAllocator};
 
 // signed inegers
-pub use crate::integer::{
-  I128Serializer, I16Serializer, I32Serializer, I64Serializer, I128, I16, I32, I64,
-};
+// pub use crate::integer::{
+//   I128Serializer, I16Serializer, I32Serializer, I64Serializer, I128, I16,
+// I32, I64, };
 
 // unsigned inegers
-pub use crate::integer::{
-  U128Serializer, U16Serializer, U32Serializer, U64Serializer, U128, U16, U32, U64,
-};
+// pub use crate::integer::{
+//   U128Serializer, U16Serializer, U32Serializer, U64Serializer, U128, U16,
+// U32, U64, };
 
 #[cfg(feature = "alloc")]
 pub use crate::{fallible_vec_allocator::FallibleVecAllocator, vec_allocator::VecAllocator};
@@ -62,37 +64,38 @@ extern crate std;
 mod allocator;
 // mod anonymous_serializer;
 // mod array;
-mod bool;
-mod char;
+// mod bool;
+// mod char;
 mod common;
 mod continuation;
 mod done;
 mod error;
-mod i8;
+// mod i8;
 mod integer;
 mod is;
-mod isize;
+// mod isize;
 mod maybe_uninit_ext;
-mod offset;
+// mod offset;
 // mod option;
 mod padding_serializer;
 mod range_ext;
 // mod result;
 mod serializer;
-mod slice;
+// mod slice;
 mod slice_allocator;
 mod state;
-mod str;
+// mod str;
 mod to_i64;
 mod to_u64;
 mod u8;
-mod unit;
+// mod unit;
+mod serialize;
 mod usize;
 mod view;
 mod x;
 
-#[cfg(feature = "alloc")]
-mod alloc_impls;
+// #[cfg(feature = "alloc")]
+// mod alloc_impls;
 
 #[cfg(feature = "alloc")]
 mod vec_allocator;

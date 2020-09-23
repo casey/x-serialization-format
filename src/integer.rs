@@ -17,15 +17,24 @@ macro_rules! integer {
     }
 
     impl X for $native {
-      type Serializer<A: Allocator, C: Continuation<A>> = $serializer<A, C>;
       type View = $view;
 
       fn from_view(view: &Self::View) -> Self {
         Self::from_le_bytes(view.le_bytes)
       }
+
+      fn serialize<A: Allocator, C: Continuation<A>>(
+        &self,
+        mut serializer: Self::Serializer<A, C>,
+      ) -> C {
+        serializer.state.write(&self.to_le_bytes());
+        serializer.state.continuation()
+      }
     }
 
     impl View for $view {
+      type Serializer<A: Allocator, C: Continuation<A>> = $serializer<A, C>;
+
       fn check<'value>(suspect: &'value MaybeUninit<Self>, _buffer: &[u8]) -> Result<&'value Self> {
         // All bit patterns of the correct size are valid values of type Self.
         Ok(unsafe { suspect.assume_init_ref() })
@@ -33,16 +42,10 @@ macro_rules! integer {
     }
 
     impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for $serializer<A, C> {
-      type Input = $native;
-
       fn new(state: State<A, C>) -> Self {
         $serializer { state }
       }
 
-      fn serialize<B: Borrow<Self::Input>>(mut self, native: B) -> C {
-        self.state.write(&native.borrow().to_le_bytes());
-        self.state.continuation()
-      }
     }
   }
 }

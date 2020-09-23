@@ -15,22 +15,36 @@ pub(crate) use static_assertions::const_assert;
 
 // traits
 pub(crate) use crate::{
-  allocator::Allocator, continuation::Continuation, is::Is, maybe_uninit_ext::MaybeUninitExt,
-  range_ext::RangeExt, serializer::Serializer, to_i64::ToI64, to_u64::ToU64, view::View, x::X,
+  allocator::Allocator,
+  continuation::Continuation,
+  integer::{I64Serializer, U64Serializer, I64, U64},
+  is::Is,
+  maybe_uninit_ext::MaybeUninitExt,
+  range_ext::RangeExt,
+  serialize::Serialize,
+  serializer::Serializer,
+  to_i64::ToI64,
+  to_u64::ToU64,
+  view::View,
+  x::X,
 };
 
 // structs and enums
+// pub(crate) use crate::{
+//   done::Done,
+//   error::Error,
+//   offset::Offset,
+//   padding_serializer::PaddingSerializer,
+//   slice::{Slice, SliceSerializer},
+//   slice_allocator::SliceAllocator,
+//   state::State,
+//   str::{Str, StrSerializer},
+//   usize::Usize,
+// };
+
 pub(crate) use crate::{
-  done::Done,
-  error::Error,
-  integer::{I64Serializer, U64Serializer, I64, U64},
-  offset::Offset,
-  padding_serializer::PaddingSerializer,
-  slice::{Slice, SliceSerializer},
-  slice_allocator::SliceAllocator,
+  done::Done, error::Error, padding_serializer::PaddingSerializer, slice_allocator::SliceAllocator,
   state::State,
-  str::{Str, StrSerializer},
-  usize::Usize,
 };
 
 // type aliases
