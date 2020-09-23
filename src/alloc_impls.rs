@@ -11,7 +11,7 @@ impl<N: X> X for Vec<N> {
   }
 }
 
-impl<N: X + FromView> FromView for Vec<N> {
+impl<N: FromView> FromView for Vec<N> {
   fn from_view(view: &Self::View) -> Self {
     view.as_slice().iter().map(FromView::from_view).collect()
   }

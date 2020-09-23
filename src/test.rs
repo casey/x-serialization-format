@@ -1,6 +1,6 @@
 use crate::common::*;
 
-pub(crate) fn ok<Native: X + Eq + Debug + FromView>(native: Native, want: &[u8]) {
+pub(crate) fn ok<Native: Eq + Debug + FromView>(native: Native, want: &[u8]) {
   let have = native.serialize_to_vec();
   assert_eq!(have, want);
   let view = Native::view(&have).unwrap();

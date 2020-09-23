@@ -59,8 +59,10 @@ extern crate alloc;
 #[cfg(feature = "std")]
 extern crate std;
 
-mod allocator;
+// TODO: Do I need this?
 // mod anonymous_serializer;
+
+mod allocator;
 mod array;
 mod bool;
 mod char;
@@ -68,6 +70,7 @@ mod common;
 mod continuation;
 mod done;
 mod error;
+mod from_view;
 mod i8;
 mod integer;
 mod is;
@@ -77,8 +80,7 @@ mod offset;
 mod option;
 mod padding_serializer;
 mod range_ext;
-// mod result;
-mod from_view;
+mod result;
 mod serialize;
 mod serializer;
 mod slice;

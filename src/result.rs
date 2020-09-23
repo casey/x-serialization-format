@@ -1,13 +1,15 @@
 use crate::common::*;
 
 impl<T: X, E: X> X for core::result::Result<T, E> {
-  type Serializer<A: Allocator, C: Continuation<A>> = ResultSerializer<A, C, T::View, E::View>;
   type View = self::Result<T::View, E::View>;
 
-  fn from_view(view: &Self::View) -> Self {
-    match view {
-      self::Result::Ok(t) => core::result::Result::Ok(X::from_view(t)),
-      self::Result::Err(e) => core::result::Result::Err(X::from_view(e)),
+  fn serialize<A: Allocator, C: Continuation<A>>(
+    &self,
+    mut serializer: Self::Serializer<A, C>,
+  ) -> C {
+    match self {
+      Ok(t) => serializer.ok(t),
+      Err(e) => serializer.err(e),
     }
   }
 }
@@ -23,6 +25,8 @@ pub enum Result<T: View, E: View> {
 }
 
 impl<T: View, E: View> View for self::Result<T, E> {
+  type Serializer<A: Allocator, C: Continuation<A>> = ResultSerializer<A, C, T, E>;
+
   fn check<'value>(
     suspect: &'value MaybeUninit<Self>,
     buffer: &[u8],
@@ -59,17 +63,17 @@ pub struct ResultSerializer<A: Allocator, C: Continuation<A>, T: View, E: View> 
 }
 
 impl<A: Allocator, C: Continuation<A>, T: View, E: View> ResultSerializer<A, C, T, E> {
-  fn ok<B: Borrow<T::Native>>(mut self, t: B) -> C {
+  fn ok<N: X<View = T>>(mut self, ok: &N) -> C {
     self.state.write(&[OK_DISCRIMINANT]);
-    <T::Native as X>::Serializer::new(self.state.identity::<PaddingSerializer<A, C, T, E>>())
-      .serialize(t)
+    N::Serializer::new(self.state.identity::<PaddingSerializer<A, C, T, E>>())
+      .serialize(ok)
       .serialize_padding()
   }
 
-  fn err<B: Borrow<E::Native>>(mut self, e: B) -> C {
+  fn err<N: X<View = E>>(mut self, err: &N) -> C {
     self.state.write(&[ERR_DISCRIMINANT]);
-    <E::Native as X>::Serializer::new(self.state.identity::<PaddingSerializer<A, C, E, T>>())
-      .serialize(e)
+    N::Serializer::new(self.state.identity::<PaddingSerializer<A, C, E, T>>())
+      .serialize(err)
       .serialize_padding()
   }
 }
@@ -77,8 +81,6 @@ impl<A: Allocator, C: Continuation<A>, T: View, E: View> ResultSerializer<A, C, 
 impl<A: Allocator, C: Continuation<A>, T: View, E: View> Serializer<A, C>
   for ResultSerializer<A, C, T, E>
 {
-  type Native = core::result::Result<T::Native, E::Native>;
-
   fn new(state: State<A, C>) -> Self {
     Self {
       t: PhantomData,
@@ -86,11 +88,13 @@ impl<A: Allocator, C: Continuation<A>, T: View, E: View> Serializer<A, C>
       state,
     }
   }
+}
 
-  fn serialize<B: Borrow<Self::Native>>(self, native: B) -> C {
-    match native.borrow() {
-      Ok(t) => self.ok(t),
-      Err(e) => self.err(e),
+impl<T: FromView, E: FromView> FromView for core::result::Result<T, E> {
+  fn from_view(view: &Self::View) -> Self {
+    match view {
+      self::Result::Ok(t) => core::result::Result::Ok(T::from_view(t)),
+      self::Result::Err(e) => core::result::Result::Err(E::from_view(e)),
     }
   }
 }

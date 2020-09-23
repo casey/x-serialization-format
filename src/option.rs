@@ -1,5 +1,8 @@
 use crate::common::*;
 
+// TODO:
+// should serializer get .none and .some methods?
+
 impl<N: X> X for core::option::Option<N> {
   type View = self::Option<N::View>;
 
@@ -78,7 +81,7 @@ impl<A: Allocator, C: Continuation<A>, V: View> Serializer<A, C> for OptionSeria
   }
 }
 
-impl<T: X + FromView> FromView for core::option::Option<T> {
+impl<T: FromView> FromView for core::option::Option<T> {
   fn from_view(view: &Self::View) -> Self {
     match view {
       self::Option::None => None,
