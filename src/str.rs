@@ -1,5 +1,16 @@
 use crate::common::*;
 
+impl<'a> X for &'a str {
+  type View = Str;
+
+  fn serialize<A: Allocator, C: Continuation<A>>(
+    &self,
+    mut serializer: Self::Serializer<A, C>,
+  ) -> C {
+    serializer.serialize_str(self)
+  }
+}
+
 pub struct Str {
   slice: Slice<u8>,
 }
@@ -25,6 +36,8 @@ impl<'a> From<&'a Str> for &'a str {
 }
 
 impl View for Str {
+  type Serializer<A: Allocator, C: Continuation<A>> = StrSerializer<A, C>;
+
   fn check<'value>(suspect: &'value MaybeUninit<Self>, buffer: &[u8]) -> Result<&'value Self> {
     let slice = suspect.cast::<Slice<u8>>();
     View::check(slice, buffer)?;
@@ -38,16 +51,15 @@ impl View for Str {
 }
 
 impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for StrSerializer<A, C> {
-  type Input = str;
-
   fn new(state: State<A, C>) -> Self {
     Self { state }
   }
+}
 
-  fn serialize<B: Borrow<Self::Input>>(self, native: B) -> C {
-    // TODO: This needs to be fixed
-    let vec = native.borrow().as_bytes().to_vec();
-    SliceSerializer::new(self.state).serialize(vec)
+impl<A: Allocator, C: Continuation<A>> StrSerializer<A, C> {
+  pub(crate) fn serialize_str(self, string: &str) -> C {
+    // TODO: This should just call .serialize, but there's an ICE
+    SliceSerializer::<A, C, u8>::new(self.state).serialize_iterator(string.as_bytes().into_iter())
   }
 }
 
@@ -58,14 +70,14 @@ mod tests {
   #[test]
   #[rustfmt::skip]
   fn basic() {
-    ok(String::new(), &[
+    ok_serialize("", &[
       // offset
       16, 0, 0, 0, 0, 0, 0, 0,
       // length
       0, 0, 0, 0, 0, 0, 0, 0,
     ]);
 
-    ok(String::from("\0"), &[
+    ok_serialize("\0", &[
       // offset
       16, 0, 0, 0, 0, 0, 0, 0,
       // length
@@ -74,7 +86,7 @@ mod tests {
       0,
     ]);
 
-    ok(String::from("hello"), &[
+    ok_serialize("hello", &[
       // offset
       16, 0, 0, 0, 0, 0, 0, 0,
       // length

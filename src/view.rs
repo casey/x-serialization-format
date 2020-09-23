@@ -3,16 +3,9 @@ use crate::common::*;
 pub trait View: Sized {
   type Serializer<A: Allocator, C: Continuation<A>>: Serializer<A, C>;
 
-  fn to_native<N>(&self) -> N
-  where
-    N: X<View = Self>,
-  {
-    N::from_view(self)
-  }
-
   // TODO: this is a simpler impl that doesn't rely on X::from_view. Use it or
   // delete it.
-  fn to_native_prime<'a, N>(&'a self) -> N
+  fn to_native<'a, N>(&'a self) -> N
   where
     N: X<View = Self> + From<&'a Self>,
   {

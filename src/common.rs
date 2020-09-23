@@ -17,6 +17,7 @@ pub(crate) use static_assertions::const_assert;
 pub(crate) use crate::{
   allocator::Allocator,
   continuation::Continuation,
+  from_view::FromView,
   integer::{I64Serializer, U64Serializer, I64, U64},
   is::Is,
   maybe_uninit_ext::MaybeUninitExt,
@@ -33,18 +34,21 @@ pub(crate) use crate::{
 // pub(crate) use crate::{
 //   done::Done,
 //   error::Error,
-//   offset::Offset,
 //   padding_serializer::PaddingSerializer,
-//   slice::{Slice, SliceSerializer},
 //   slice_allocator::SliceAllocator,
 //   state::State,
-//   str::{Str, StrSerializer},
-//   usize::Usize,
 // };
 
 pub(crate) use crate::{
-  done::Done, error::Error, padding_serializer::PaddingSerializer, slice_allocator::SliceAllocator,
+  done::Done,
+  error::Error,
+  offset::Offset,
+  padding_serializer::PaddingSerializer,
+  slice::{Slice, SliceSerializer},
+  slice_allocator::SliceAllocator,
   state::State,
+  str::{Str, StrSerializer},
+  usize::Usize,
 };
 
 // type aliases
@@ -80,8 +84,7 @@ pub(crate) use self::std::*;
 mod test {
   pub(crate) use core::fmt::Debug;
 
-  #[allow(unused)]
-  pub(crate) use crate::test::{err, ok};
+  pub(crate) use crate::test::{err, ok, ok_serialize};
 }
 
 #[cfg(test)]

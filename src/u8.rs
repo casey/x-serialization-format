@@ -7,16 +7,18 @@ pub struct U8Serializer<A: Allocator, C: Continuation<A>> {
 impl X for u8 {
   type View = u8;
 
-  fn from_view(view: &Self::View) -> Self {
-    *view
-  }
-
   fn serialize<A: Allocator, C: Continuation<A>>(
     &self,
     mut serializer: Self::Serializer<A, C>,
   ) -> C {
     serializer.state.write(&self.to_le_bytes());
     serializer.state.continuation()
+  }
+}
+
+impl FromView for u8 {
+  fn from_view(view: &Self::View) -> Self {
+    *view
   }
 }
 

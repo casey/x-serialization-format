@@ -1,11 +1,16 @@
 use crate::common::*;
 
 impl X for char {
-  type Serializer<A: Allocator, C: Continuation<A>> = CharSerializer<A, C>;
   type View = Char;
 
-  fn from_view(view: &Self::View) -> Self {
-    char::from_u32(view.scalar()).unwrap()
+  fn serialize<A: Allocator, C: Continuation<A>>(
+    &self,
+    mut serializer: Self::Serializer<A, C>,
+  ) -> C {
+    let value = *self as u32;
+    let bytes = value.to_le_bytes();
+    serializer.state.write(&[bytes[0], bytes[1], bytes[2]]);
+    serializer.state.continuation()
   }
 }
 
@@ -16,6 +21,8 @@ pub struct Char {
 }
 
 impl View for Char {
+  type Serializer<A: Allocator, C: Continuation<A>> = CharSerializer<A, C>;
+
   fn check<'value>(suspect: &'value MaybeUninit<Self>, _buffer: &[u8]) -> Result<&'value Self> {
     // Safe: There are no bitpattern validity requirements for Self
     let value = unsafe { suspect.assume_init_ref() };
@@ -30,6 +37,12 @@ impl View for Char {
   }
 }
 
+impl FromView for char {
+  fn from_view(view: &Self::View) -> Self {
+    char::from_u32(view.scalar()).unwrap()
+  }
+}
+
 impl Char {
   fn scalar(&self) -> u32 {
     u32::from_le_bytes([self.le_bytes[0], self.le_bytes[1], self.le_bytes[2], 0])
@@ -41,18 +54,8 @@ pub struct CharSerializer<A: Allocator, C: Continuation<A>> {
 }
 
 impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for CharSerializer<A, C> {
-  type Input = char;
-
   fn new(state: State<A, C>) -> Self {
     Self { state }
-  }
-
-  fn serialize<B: Borrow<Self::Input>>(mut self, native: B) -> C {
-    let native = native.borrow();
-    let value = *native as u32;
-    let bytes = value.to_le_bytes();
-    self.state.write(&[bytes[0], bytes[1], bytes[2]]);
-    self.state.continuation()
   }
 }
 

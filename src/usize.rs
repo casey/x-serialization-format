@@ -9,12 +9,19 @@ pub struct Usize {
 impl X for usize {
   type View = Usize;
 
-  fn from_view(view: &Self::View) -> Self {
-    u64::from_view(&view.inner) as usize
+  fn serialize<A: Allocator, C: Continuation<A>>(
+    &self,
+    mut serializer: Self::Serializer<A, C>,
+  ) -> C {
+    // TODO: We should be delegating to U64Serializer, but that causes an ICE
+    serializer.state.write(&self.to_u64().to_le_bytes());
+    serializer.state.continuation()
   }
+}
 
-  fn serialize<A: Allocator, C: Continuation<A>>(&self, serializer: Self::Serializer<A, C>) -> C {
-    U64Serializer::new(serializer.state).serialize(&self.to_u64())
+impl FromView for usize {
+  fn from_view(view: &Self::View) -> Self {
+    view.into()
   }
 }
 
@@ -50,6 +57,12 @@ impl View for Usize {
     }
 
     Ok(reference)
+  }
+}
+
+impl From<&Usize> for usize {
+  fn from(view: &Usize) -> usize {
+    u64::from(&view.inner) as usize
   }
 }
 

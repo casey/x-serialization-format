@@ -1,11 +1,21 @@
 use crate::common::*;
 
 impl X for isize {
-  type Serializer<A: Allocator, C: Continuation<A>> = IsizeSerializer<A, C>;
   type View = Isize;
 
+  fn serialize<A: Allocator, C: Continuation<A>>(
+    &self,
+    mut serializer: Self::Serializer<A, C>,
+  ) -> C {
+    // TODO: We should be delegating to I64Serializer, but that causes an ICE
+    serializer.state.write(&self.to_i64().to_le_bytes());
+    serializer.state.continuation()
+  }
+}
+
+impl FromView for isize {
   fn from_view(view: &Self::View) -> Self {
-    i64::from_view(&view.inner) as isize
+    view.into()
   }
 }
 
@@ -15,6 +25,8 @@ pub struct Isize {
 }
 
 impl View for Isize {
+  type Serializer<A: Allocator, C: Continuation<A>> = IsizeSerializer<A, C>;
+
   fn check<'value>(suspect: &'value MaybeUninit<Self>, buffer: &[u8]) -> Result<&'value Self> {
     let struct_pointer: *const Isize = suspect.as_ptr();
 
@@ -47,20 +59,19 @@ impl View for Isize {
   }
 }
 
+impl From<&Isize> for isize {
+  fn from(view: &Isize) -> isize {
+    i64::from(&view.inner) as isize
+  }
+}
+
 pub struct IsizeSerializer<A: Allocator, C: Continuation<A>> {
   state: State<A, C>,
 }
 
 impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for IsizeSerializer<A, C> {
-  type Input = isize;
-
   fn new(state: State<A, C>) -> Self {
     Self { state }
-  }
-
-  fn serialize<B: Borrow<Self::Input>>(self, native: B) -> C {
-    let native = native.borrow();
-    I64Serializer::new(self.state).serialize(native.to_i64())
   }
 }
 

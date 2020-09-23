@@ -19,10 +19,6 @@ macro_rules! integer {
     impl X for $native {
       type View = $view;
 
-      fn from_view(view: &Self::View) -> Self {
-        Self::from_le_bytes(view.le_bytes)
-      }
-
       fn serialize<A: Allocator, C: Continuation<A>>(
         &self,
         mut serializer: Self::Serializer<A, C>,
@@ -46,6 +42,18 @@ macro_rules! integer {
         $serializer { state }
       }
 
+    }
+
+    impl From<&$view> for $native {
+      fn from(view: &$view) -> $native {
+        Self::from_le_bytes(view.le_bytes)
+      }
+    }
+
+    impl FromView for $native {
+      fn from_view(view: &Self::View) -> Self {
+        view.into()
+      }
     }
   }
 }

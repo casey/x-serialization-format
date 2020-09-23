@@ -1,29 +1,13 @@
 use crate::common::*;
 
-// TODO:
-// This issue does not concern no-alloc deserialization. This just concerns the
-// way that native types can be declared. This is a problem becasue no-alloc
-// users need to declare variable length sequences, but don't have Vec or String
-// at hand
-//
-// Option:
-// - add a new FromView trait
-// - View::to_native is implemented in terms of this trait
-// - (or just reuse From/Into)?
-//
-// Users can declare whether or not their type should get a FromView impl.
-//
-// Only works if all fields impl FromView, otherwise fails.
-//
-// Things like Vec<N> get FromView. &[N] does not.
-
 impl<'a, N: X> X for &'a [N] {
-  type Borrowed = [N];
-  type Serializer<A: Allocator, C: Continuation<A>> = SliceSerializer<A, C, N>;
   type View = Slice<N::View>;
 
-  fn from_view(view: &Self::View) -> Self {
-    todo!()
+  fn serialize<A: Allocator, C: Continuation<A>>(
+    &self,
+    mut serializer: Self::Serializer<A, C>,
+  ) -> C {
+    serializer.serialize_iterator(self.into_iter())
   }
 }
 
@@ -50,6 +34,8 @@ impl<'a, V: View> IntoIterator for &'a Slice<V> {
 }
 
 impl<V: View> View for Slice<V> {
+  type Serializer<A: Allocator, C: Continuation<A>> = SliceSerializer<A, C, V>;
+
   fn check<'value>(suspect: &'value MaybeUninit<Self>, buffer: &[u8]) -> Result<&'value Self> {
     let length: &MaybeUninit<Usize> =
       unsafe { &*((suspect.as_ptr() as *const Offset<V>).add(1) as *const MaybeUninit<Usize>) };
@@ -64,37 +50,37 @@ impl<V: View> View for Slice<V> {
   }
 }
 
-pub struct SliceSerializer<A: Allocator, C: Continuation<A>, N: X> {
+pub struct SliceSerializer<A: Allocator, C: Continuation<A>, V: View> {
   state:   State<A, C>,
-  element: PhantomData<N>,
+  element: PhantomData<V>,
 }
 
-impl<A: Allocator, C: Continuation<A>, N: X> Serializer<A, C> for SliceSerializer<A, C, N> {
-  type Input = [N];
-
+impl<A: Allocator, C: Continuation<A>, V: View> Serializer<A, C> for SliceSerializer<A, C, V> {
   fn new(state: State<A, C>) -> Self {
     Self {
       element: PhantomData,
       state,
     }
   }
+}
 
-  fn serialize<B: Borrow<Self::Input>>(self, native: B) -> C {
-    let native = native.borrow();
-    let mut serializer = self.len(native.len());
-    for element in native {
-      serializer = serializer.element(element.borrow());
+impl<A: Allocator, C: Continuation<A>, V: View> SliceSerializer<A, C, V> {
+  pub(crate) fn serialize_iterator<'a, N: 'a + X<View = V>, I: ExactSizeIterator<Item = &'a N>>(
+    self,
+    iter: I,
+  ) -> C {
+    let mut serializer = self.len(iter.len());
+    for element in iter {
+      serializer = serializer.element(element);
     }
     serializer.end()
   }
-}
 
-impl<A: Allocator, C: Continuation<A>, N: X> SliceSerializer<A, C, N> {
-  fn len(mut self, length: usize) -> AllocatedSliceSerializer<A, C, N> {
+  fn len(mut self, length: usize) -> AllocatedSliceSerializer<A, C, V> {
     let offset = self.state.end();
     self.state.write(&offset.to_u64().to_le_bytes());
     self.state.write(&length.to_u64().to_le_bytes());
-    let bytes = mem::size_of::<N::View>() * length;
+    let bytes = mem::size_of::<V>() * length;
     self.state.push(bytes);
 
     AllocatedSliceSerializer {
@@ -106,19 +92,21 @@ impl<A: Allocator, C: Continuation<A>, N: X> SliceSerializer<A, C, N> {
   }
 }
 
-pub struct AllocatedSliceSerializer<A: Allocator, C: Continuation<A>, N: X> {
-  element:    PhantomData<N>,
+pub struct AllocatedSliceSerializer<A: Allocator, C: Continuation<A>, V: View> {
+  element:    PhantomData<V>,
   length:     usize,
   serialized: usize,
   state:      State<A, C>,
 }
 
-impl<A: Allocator, C: Continuation<A>, N: X> AllocatedSliceSerializer<A, C, N> {
-  fn element<B: Borrow<N::Borrowed>>(self, native: B) -> Self {
-    self.element_serializer().serialize(native)
+impl<A: Allocator, C: Continuation<A>, V: View> AllocatedSliceSerializer<A, C, V> {
+  fn element<N: X<View = V>>(self, element: &N) -> Self {
+    self.element_serializer::<N>().serialize(element)
   }
 
-  fn element_serializer(self) -> <N as X>::Serializer<A, AllocatedSliceSerializer<A, C, N>> {
+  fn element_serializer<N: X<View = V>>(
+    self,
+  ) -> N::Serializer<A, AllocatedSliceSerializer<A, C, V>> {
     if self.length == self.serialized {
       todo!()
     }
@@ -132,7 +120,7 @@ impl<A: Allocator, C: Continuation<A>, N: X> AllocatedSliceSerializer<A, C, N> {
       inner,
     });
 
-    <N as X>::Serializer::new(state)
+    N::Serializer::new(state)
   }
 
   fn end(mut self) -> C {
@@ -146,7 +134,9 @@ impl<A: Allocator, C: Continuation<A>, N: X> AllocatedSliceSerializer<A, C, N> {
   }
 }
 
-impl<A: Allocator, C: Continuation<A>, N: X> Continuation<A> for AllocatedSliceSerializer<A, C, N> {
+impl<A: Allocator, C: Continuation<A>, V: View> Continuation<A>
+  for AllocatedSliceSerializer<A, C, V>
+{
   type Seed = SliceSeed<A, C>;
 
   fn continuation(state: State<A, Self>) -> Self {
@@ -174,8 +164,11 @@ mod tests {
 
   #[test]
   fn basic() {
+    let slice: &[u8] = &[0u8, 1, 2, 3];
+    let serialized = slice.serialize_to_vec();
+
     #[rustfmt::skip]
-    ok(vec![0u8, 1, 2, 3], &[
+    assert_eq!(&serialized, &[
       // offset
       16, 0, 0, 0, 0, 0, 0, 0,
       // length

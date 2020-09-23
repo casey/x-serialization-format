@@ -64,38 +64,39 @@ extern crate std;
 mod allocator;
 // mod anonymous_serializer;
 // mod array;
-// mod bool;
-// mod char;
+mod bool;
+mod char;
 mod common;
 mod continuation;
 mod done;
 mod error;
-// mod i8;
+mod i8;
 mod integer;
 mod is;
-// mod isize;
+mod isize;
 mod maybe_uninit_ext;
-// mod offset;
+mod offset;
 // mod option;
 mod padding_serializer;
 mod range_ext;
 // mod result;
+mod from_view;
+mod serialize;
 mod serializer;
-// mod slice;
+mod slice;
 mod slice_allocator;
 mod state;
-// mod str;
+mod str;
 mod to_i64;
 mod to_u64;
 mod u8;
-// mod unit;
-mod serialize;
+mod unit;
 mod usize;
 mod view;
 mod x;
 
-// #[cfg(feature = "alloc")]
-// mod alloc_impls;
+#[cfg(feature = "alloc")]
+mod alloc_impls;
 
 #[cfg(feature = "alloc")]
 mod vec_allocator;
