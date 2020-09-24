@@ -7,7 +7,6 @@ pub use x_derive::X;
 pub trait X: Sized {
   type View: View;
 
-  // This just avoids needing to type <<Self as X>::View as View>::Serializer
   type Serializer<A: Allocator, C: Continuation<A>>: Serializer<A, C> =
     <<Self as X>::View as View>::Serializer<A, C>;
 
@@ -45,11 +44,11 @@ pub trait X: Sized {
 // TODO: I want this blanket impl, so references to types also implement X, but
 // I ran into a compiler ICE after I switched code over to use it.
 
-// impl<T: X> X for &T {
-// type Serializer<A: Allocator, C: Continuation<A>> = <T as X>::Serializer<A,
-// C>; type View = <T as X>::View;
-//
-// fn serialize<A: Allocator, C: Continuation<A>>(&self, serializer:
-// Self::Serializer<A, C>) -> C { <T as X>::serialize(*self, serializer)
-// }
-// }
+impl<T: X> X for &T {
+  type Serializer<A: Allocator, C: Continuation<A>> = <T as X>::Serializer<A, C>;
+  type View = <T as X>::View;
+
+  fn serialize<A: Allocator, C: Continuation<A>>(&self, serializer: Self::Serializer<A, C>) -> C {
+    <T as X>::serialize(*self, serializer)
+  }
+}
