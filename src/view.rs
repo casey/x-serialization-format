@@ -19,6 +19,9 @@ pub trait View: Sized {
     // TODO: This is required because the `check` implementation could return a
     // reference to a valid value other than the one that was passed in. By doing
     // this assertion, it is guaranteed that the value passed in is valid.
+    //
+    // If this doesn't optimize out, I should make the `check` function unsafe
+    // instead.
     assert_eq!(checked_pointer as usize, unchecked_pointer as usize);
 
     Ok(checked)
