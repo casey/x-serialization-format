@@ -1,5 +1,6 @@
 use crate::common::*;
 
+// TODO: Impl X for all View
 pub trait View: Sized {
   type Serializer<A: Allocator, C: Continuation<A>>: Serializer<A, C>;
 
@@ -15,6 +16,9 @@ pub trait View: Sized {
     let unchecked_pointer: *const MaybeUninit<Self> = unchecked;
     let checked_pointer: *const Self = checked;
 
+    // TODO: This is required because the `check` implementation could return a
+    // reference to a valid value other than the one that was passed in. By doing
+    // this assertion, it is guaranteed that the value passed in is valid.
     assert_eq!(checked_pointer as usize, unchecked_pointer as usize);
 
     Ok(checked)
@@ -52,7 +56,7 @@ pub trait View: Sized {
 }
 
 // TODO: reenable
-#[cfg(disable)]
+#[cfg(test)]
 mod tests {
   use super::*;
 
@@ -63,15 +67,19 @@ mod tests {
     struct Foo(u32);
 
     impl X for Foo {
-      type Serializer<A: Allocator, C: Continuation<A>> = Foo;
       type View = Foo;
 
-      fn from_view(_view: &Self::View) -> Self {
-        panic!()
+      fn serialize<A: Allocator, C: Continuation<A>>(
+        &self,
+        serializer: Self::Serializer<A, C>,
+      ) -> C {
+        todo!()
       }
     }
 
     impl View for Foo {
+      type Serializer<A: Allocator, C: Continuation<A>> = Foo;
+
       fn check<'value>(_: &'value MaybeUninit<Self>, _: &[u8]) -> Result<&'value Self> {
         panic!()
       }

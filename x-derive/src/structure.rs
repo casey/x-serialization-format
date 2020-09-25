@@ -2,6 +2,10 @@ use crate::common::*;
 
 use heck::CamelCase;
 
+// TODO:
+// - getters that return reference to field
+// - getters that return to_native for field
+
 pub(crate) struct Structure {
   field_accessors:    Vec<TokenTree>,
   field_methods:      Vec<Ident>,
@@ -10,7 +14,7 @@ pub(crate) struct Structure {
   input:              DataStruct,
   serializer_methods: Vec<Ident>,
   serializers:        Vec<Ident>,
-  x:                  TokenStream,
+  krate:              TokenStream,
 }
 
 fn number(index: usize) -> &'static str {
@@ -24,7 +28,12 @@ fn number(index: usize) -> &'static str {
 }
 
 impl Structure {
-  pub(crate) fn new(x: TokenStream, ident: Ident, input: DataStruct) -> Self {
+  pub(crate) fn new(
+    krate: TokenStream,
+    ident: Ident,
+    attributes: InputAttributes,
+    input: DataStruct,
+  ) -> Self {
     let field_types = input.fields.iter().map(|field| field.ty.clone()).collect();
 
     let field_accessors = match &input.fields {
@@ -107,7 +116,7 @@ impl Structure {
       input,
       serializers,
       serializer_methods,
-      x,
+      krate,
     }
   }
 
@@ -136,7 +145,7 @@ impl Tokens for Structure {
 
     let accessors = self.field_accessors();
 
-    let x = &self.x;
+    let x = &self.krate;
 
     let body = match &self.input.fields {
       Fields::Named(_) => quote!({#(#accessors: <#types as #x::X>::View,)*}),
@@ -156,22 +165,23 @@ impl Tokens for Structure {
 
     let serializer_methods = self.serializer_methods();
 
+    let field_methods = &self.field_methods;
+
+    let continuable = &self.serializers[1..];
+
     let serialize_inner = if self.field_count() == 0 {
-      quote!(self.state.continuation())
+      quote!(serializer.state.continuation())
     } else {
       quote!(
-        let native = native.borrow();
-        self #(.#serializer_methods().serialize(&native.#accessors))*
+        serializer #(.#field_methods(&self.#accessors))*
       )
     };
 
-    let field_methods = &self.field_methods;
-
-    let from_view_inner = match &self.input.fields {
-      Fields::Named(_) => quote!({#(#accessors: view.#field_methods(),)*}),
-      Fields::Unnamed(_) => quote!((#(view.#field_methods(),)*)),
-      Fields::Unit => quote!(),
-    };
+    // let from_view_inner = match &self.input.fields {
+    //   Fields::Named(_) => quote!({#(#accessors: view.#field_methods(),)*}),
+    //   Fields::Unnamed(_) => quote!((#(view.#field_methods(),)*)),
+    //   Fields::Unit => quote!(),
+    // };
 
     let continuations = (0..serializers.len()).into_iter().map(|i| {
       if let Some(serializer) = serializers.get(i + 1) {
@@ -181,37 +191,36 @@ impl Tokens for Structure {
       }
     });
 
-    let continuable = &self.serializers[1..];
-
-    let view_getters = match &self.input.fields {
-      Fields::Named(_) | Fields::Unnamed(_) => quote!(
-        impl #view {
-          #(
-          fn #field_methods(&self) -> #types {
-            #x::X::from_view(&self.#accessors)
-          }
-          )*
-        }
-      ),
-      Fields::Unit => quote!(),
-    };
+    // let view_getters = match &self.input.fields {
+    //   Fields::Named(_) | Fields::Unnamed(_) => quote!(
+    //     impl #view {
+    //       #(
+    //       fn #field_methods(&self) -> #types {
+    //         #x::X::from_view(&self.#accessors)
+    //       }
+    //       )*
+    //     }
+    //   ),
+    //   Fields::Unit => quote!(),
+    // };
 
     quote!(
       impl #x::X for #ident {
         type View = #view;
-        type Serializer<A: #x::Allocator, C: #x::Continuation<A>> = #first_serializer<A, C>;
 
-        fn from_view(view: &Self::View) -> Self {
-          #ident #from_view_inner
+        fn serialize<A: #x::Allocator, C: #x::Continuation<A>>(&self, serializer: Self::Serializer<A, C>) -> C {
+          #serialize_inner
         }
       }
 
       #[repr(C)]
       struct #view #body
 
-      #view_getters
+      // #view_getters
 
       impl #x::View for #view {
+        type Serializer<A: #x::Allocator, C: #x::Continuation<A>> = #first_serializer<A, C>;
+
         fn check<'value>(
           suspect: &'value #x::core::mem::MaybeUninit<Self>,
           buffer: &[u8],
@@ -239,7 +248,9 @@ impl Tokens for Structure {
 
       #(
       impl <A: #x::Allocator, C: #x::Continuation<A>> #serializers<A, C> {
-        fn #field_methods(self, value: #types) -> #continuations {
+        fn #field_methods<N>(self, value: &N) -> #continuations
+          where N: #x::X<Serializer = <#types as #x::X>::Serializer<A, #continuations>>,
+        {
           self.#serializer_methods().serialize(value)
         }
 
@@ -250,14 +261,8 @@ impl Tokens for Structure {
       )*
 
       impl<A: #x::Allocator, C: #x::Continuation<A>> #x::Serializer<A, C> for #first_serializer<A, C> {
-        type Input = #ident;
-
         fn new(state: #x::State<A, C>) -> Self {
           Self { state }
-        }
-
-        fn serialize<B: #x::core::borrow::Borrow<Self::Input>>(self, native: B) -> C {
-          #serialize_inner
         }
       }
 
@@ -287,18 +292,17 @@ mod tests {
       impl ::x::X for Foo {
         type View = FooView;
 
-        type Serializer<A: ::x::Allocator, C: ::x::Continuation<A>> = FooSerializer<A, C>;
-
-        fn from_view(view: &Self::View ) -> Self {
-          Foo
+        fn serialize<A: ::x::Allocator, C: ::x::Continuation<A>>(&self, serializer: Self::Serializer<A, C>) -> C {
+          serializer.state.continuation()
         }
-
       }
 
       #[repr(C)]
       struct FooView;
 
       impl ::x::View for FooView {
+        type Serializer<A: ::x::Allocator, C: ::x::Continuation<A>> = FooSerializer<A, C>;
+
         fn check<'value>(
           suspect: &'value ::x::core::mem::MaybeUninit<Self>,
           buffer: &[u8],
@@ -313,14 +317,8 @@ mod tests {
       }
 
       impl<A: ::x::Allocator, C: ::x::Continuation<A>> ::x::Serializer<A, C> for FooSerializer<A, C> {
-        type Input = Foo;
-
         fn new(state: ::x::State<A, C>) -> Self {
           Self { state }
-        }
-
-        fn serialize<B: ::x::core::borrow::Borrow<Self::Input>>(self, native: B) -> C {
-          self.state.continuation()
         }
       }
     );
@@ -337,13 +335,8 @@ mod tests {
       impl ::x::X for Foo {
         type View = FooView;
 
-        type Serializer<A: ::x::Allocator, C: ::x::Continuation<A>> = FooSerializer<A, C>;
-
-        fn from_view(view: &Self::View) -> Self {
-          Foo {
-            a: view.a(),
-            b: view.b(),
-          }
+        fn serialize<A: ::x::Allocator, C: ::x::Continuation<A>>(&self, serializer: Self::Serializer<A, C>) -> C {
+          serializer.a(&self.a).b(&self.b)
         }
       }
 
@@ -353,17 +346,9 @@ mod tests {
         b: <String as ::x::X>::View,
       }
 
-      impl FooView {
-        fn a(&self) -> u16 {
-          ::x::X::from_view(&self.a)
-        }
-
-        fn b(&self) -> String {
-          ::x::X::from_view(&self.b)
-        }
-      }
-
       impl ::x::View for FooView {
+        type Serializer<A: ::x::Allocator, C: ::x::Continuation<A>> = FooSerializer<A, C>;
+
         fn check<'value>(
           suspect: &'value ::x::core::mem::MaybeUninit<Self>,
           buffer: &[u8],
@@ -396,7 +381,9 @@ mod tests {
       }
 
       impl<A: ::x::Allocator, C: ::x::Continuation<A>> FooSerializer<A, C> {
-        fn a(self, value: u16) -> FooSerializerB<A, C> {
+        fn a<N>(self, value: &N) -> FooSerializerB<A, C>
+          where N: ::x::X<Serializer = <u16 as ::x::X>::Serializer<A, C>>,
+        {
           self.a_serializer().serialize(value)
         }
 
@@ -406,7 +393,9 @@ mod tests {
       }
 
       impl<A: ::x::Allocator, C: ::x::Continuation<A>> FooSerializerB<A, C> {
-        fn b(self, value: String) -> C {
+        fn b<N>(self, value: &N) -> C
+          where N: ::x::X<Serializer = <String as ::x::X>::Serializer<A, C>>,
+        {
           self.b_serializer().serialize(value)
         }
 
@@ -416,20 +405,8 @@ mod tests {
       }
 
       impl<A: ::x::Allocator, C: ::x::Continuation<A>> ::x::Serializer<A, C> for FooSerializer<A, C> {
-        type Input = Foo;
-
         fn new(state: ::x::State<A, C>) -> Self {
           Self { state }
-        }
-
-        fn serialize<B: ::x::core::borrow::Borrow<Self::Input>>(self, native: B) -> C {
-          let native = native.borrow();
-
-          self
-            .a_serializer()
-            .serialize(&native.a)
-            .b_serializer()
-            .serialize(&native.b)
         }
       }
 
@@ -451,27 +428,17 @@ mod tests {
       impl ::x::X for Foo {
         type View = FooView;
 
-        type Serializer<A: ::x::Allocator, C: ::x::Continuation<A>> = FooSerializer<A, C>;
-
-        fn from_view(view: &Self::View) -> Self {
-          Foo(view.zero(), view.one(),)
+        fn serialize<A: ::x::Allocator, C: ::x::Continuation<A>>(&self, serializer: Self::Serializer<A, C>) -> C {
+          serializer.zero(&self.0).one(&self.1)
         }
       }
 
       #[repr(C)]
       struct FooView(<u16 as ::x::X>::View, <String as ::x::X>::View,);
 
-      impl FooView {
-        fn zero(&self) -> u16 {
-          ::x::X::from_view(&self.0)
-        }
-
-        fn one(&self) -> String {
-          ::x::X::from_view(&self.1)
-        }
-      }
-
       impl ::x::View for FooView {
+        type Serializer<A: ::x::Allocator, C: ::x::Continuation<A>> = FooSerializer<A, C>;
+
         fn check<'value>(
           suspect: &'value ::x::core::mem::MaybeUninit<Self>,
           buffer: &[u8],
@@ -504,7 +471,9 @@ mod tests {
       }
 
       impl<A: ::x::Allocator, C: ::x::Continuation<A>> FooSerializer<A, C> {
-        fn zero(self, value: u16) -> FooSerializerOne<A, C> {
+        fn zero<N>(self, value: &N) -> FooSerializerOne<A, C>
+          where N: ::x::X<Serializer = <u16 as ::x::X>::Serializer<A, C>>,
+        {
           self.zero_serializer().serialize(value)
         }
 
@@ -514,7 +483,9 @@ mod tests {
       }
 
       impl<A: ::x::Allocator, C: ::x::Continuation<A>> FooSerializerOne<A, C> {
-        fn one(self, value: String) -> C {
+        fn one<N>(self, value: &N) -> C
+          where N: ::x::X<Serializer = <String as ::x::X>::Serializer<A, C>>,
+        {
           self.one_serializer().serialize(value)
         }
 
@@ -524,20 +495,8 @@ mod tests {
       }
 
       impl<A: ::x::Allocator, C: ::x::Continuation<A>> ::x::Serializer<A, C> for FooSerializer<A, C> {
-        type Input = Foo;
-
         fn new(state: ::x::State<A, C>) -> Self {
           Self { state }
-        }
-
-        fn serialize<B: ::x::core::borrow::Borrow<Self::Input>>(self, native: B) -> C {
-          let native = native.borrow();
-
-          self
-            .zero_serializer()
-            .serialize(&native.0)
-            .one_serializer()
-            .serialize(&native.1)
         }
       }
 

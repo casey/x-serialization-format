@@ -9,9 +9,10 @@ publish = false
 proc-macro = true
 
 [dependencies]
+darling           = "0.10.2"
+heck              = "0.3.1"
 pretty_assertions = "0.6.1"
 proc-macro-crate  = "0.1.5"
 proc-macro2       = "1.0.12"
 quote             = "1.0.4"
 syn               = "1.0.18"
-heck = "0.3.1"

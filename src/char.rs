@@ -7,10 +7,18 @@ impl X for char {
     &self,
     mut serializer: Self::Serializer<A, C>,
   ) -> C {
-    let value = *self as u32;
-    let bytes = value.to_le_bytes();
-    serializer.state.write(&[bytes[0], bytes[1], bytes[2]]);
-    serializer.state.continuation()
+    serializer.serialize_char(*self)
+  }
+}
+
+impl X for Char {
+  type View = Char;
+
+  fn serialize<A: Allocator, C: Continuation<A>>(
+    &self,
+    mut serializer: Self::Serializer<A, C>,
+  ) -> C {
+    serializer.serialize_char(char::from_view(self))
   }
 }
 
@@ -56,6 +64,14 @@ pub struct CharSerializer<A: Allocator, C: Continuation<A>> {
 impl<A: Allocator, C: Continuation<A>> Serializer<A, C> for CharSerializer<A, C> {
   fn new(state: State<A, C>) -> Self {
     Self { state }
+  }
+}
+
+impl<A: Allocator, C: Continuation<A>> CharSerializer<A, C> {
+  fn serialize_char(mut self, value: char) -> C {
+    let bytes = (value as u32).to_le_bytes();
+    self.state.write(&[bytes[0], bytes[1], bytes[2]]);
+    self.state.continuation()
   }
 }
 
