@@ -71,7 +71,7 @@ mod tests {
 
       fn serialize<A: Allocator, C: Continuation<A>>(
         &self,
-        serializer: Self::Serializer<A, C>,
+        serializer: <Self::View as View>::Serializer<A, C>,
       ) -> C {
         todo!()
       }

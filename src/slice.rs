@@ -5,7 +5,7 @@ impl<'a, N: X> X for &'a [N] {
 
   fn serialize<A: Allocator, C: Continuation<A>>(
     &self,
-    mut serializer: Self::Serializer<A, C>,
+    mut serializer: <Self::View as View>::Serializer<A, C>,
   ) -> C {
     serializer.serialize_iterator(self.into_iter())
   }
@@ -106,7 +106,7 @@ impl<A: Allocator, C: Continuation<A>, V: View> AllocatedSliceSerializer<A, C, V
 
   fn element_serializer<N: X<View = V>>(
     self,
-  ) -> N::Serializer<A, AllocatedSliceSerializer<A, C, V>> {
+  ) -> <N::View as View>::Serializer<A, AllocatedSliceSerializer<A, C, V>> {
     if self.length == self.serialized {
       todo!()
     }
@@ -120,7 +120,7 @@ impl<A: Allocator, C: Continuation<A>, V: View> AllocatedSliceSerializer<A, C, V
       inner,
     });
 
-    N::Serializer::new(state)
+    <N::View as View>::Serializer::new(state)
   }
 
   fn end(mut self) -> C {

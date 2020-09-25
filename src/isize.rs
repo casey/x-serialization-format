@@ -5,7 +5,7 @@ impl X for isize {
 
   fn serialize<A: Allocator, C: Continuation<A>>(
     &self,
-    mut serializer: Self::Serializer<A, C>,
+    mut serializer: <Self::View as View>::Serializer<A, C>,
   ) -> C {
     // TODO: We should be delegating to I64Serializer, but that causes an ICE
     serializer.state.write(&self.to_i64().to_le_bytes());

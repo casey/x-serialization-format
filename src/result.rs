@@ -5,7 +5,7 @@ impl<T: X, E: X> X for core::result::Result<T, E> {
 
   fn serialize<A: Allocator, C: Continuation<A>>(
     &self,
-    mut serializer: Self::Serializer<A, C>,
+    mut serializer: <Self::View as View>::Serializer<A, C>,
   ) -> C {
     match self {
       Ok(t) => serializer.ok(t),
@@ -65,14 +65,14 @@ pub struct ResultSerializer<A: Allocator, C: Continuation<A>, T: View, E: View> 
 impl<A: Allocator, C: Continuation<A>, T: View, E: View> ResultSerializer<A, C, T, E> {
   fn ok<N: X<View = T>>(mut self, ok: &N) -> C {
     self.state.write(&[OK_DISCRIMINANT]);
-    N::Serializer::new(self.state.identity::<PaddingSerializer<A, C, T, E>>())
+    <N::View as View>::Serializer::new(self.state.identity::<PaddingSerializer<A, C, T, E>>())
       .serialize(ok)
       .serialize_padding()
   }
 
   fn err<N: X<View = E>>(mut self, err: &N) -> C {
     self.state.write(&[ERR_DISCRIMINANT]);
-    N::Serializer::new(self.state.identity::<PaddingSerializer<A, C, E, T>>())
+    <N::View as View>::Serializer::new(self.state.identity::<PaddingSerializer<A, C, E, T>>())
       .serialize(err)
       .serialize_padding()
   }

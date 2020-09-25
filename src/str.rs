@@ -5,7 +5,7 @@ impl<'a> X for &'a str {
 
   fn serialize<A: Allocator, C: Continuation<A>>(
     &self,
-    mut serializer: Self::Serializer<A, C>,
+    mut serializer: <Self::View as View>::Serializer<A, C>,
   ) -> C {
     serializer.serialize_str(self)
   }

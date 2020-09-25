@@ -21,7 +21,7 @@ macro_rules! integer {
 
       fn serialize<A: Allocator, C: Continuation<A>>(
         &self,
-        mut serializer: Self::Serializer<A, C>,
+        mut serializer: <Self::View as View>::Serializer<A, C>,
       ) -> C {
         serializer.state.write(&self.to_le_bytes());
         serializer.state.continuation()

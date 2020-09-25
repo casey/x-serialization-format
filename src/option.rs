@@ -8,7 +8,7 @@ impl<N: X> X for core::option::Option<N> {
 
   fn serialize<A: Allocator, C: Continuation<A>>(
     &self,
-    mut serializer: Self::Serializer<A, C>,
+    mut serializer: <Self::View as View>::Serializer<A, C>,
   ) -> C {
     match self {
       None => {
@@ -27,7 +27,7 @@ impl<N: X> X for core::option::Option<N> {
       },
       Some(t) => {
         serializer.state.write(&[SOME_DISCRIMINANT]);
-        N::Serializer::new(serializer.state).serialize(t)
+        <N::View as View>::Serializer::new(serializer.state).serialize(t)
       },
     }
   }

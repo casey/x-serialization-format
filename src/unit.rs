@@ -7,7 +7,10 @@ pub struct UnitSerializer<A: Allocator, C: Continuation<A>> {
 impl X for () {
   type View = ();
 
-  fn serialize<A: Allocator, C: Continuation<A>>(&self, serializer: Self::Serializer<A, C>) -> C {
+  fn serialize<A: Allocator, C: Continuation<A>>(
+    &self,
+    serializer: <Self::View as View>::Serializer<A, C>,
+  ) -> C {
     serializer.state.continuation()
   }
 }

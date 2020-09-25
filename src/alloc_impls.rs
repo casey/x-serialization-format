@@ -5,7 +5,7 @@ impl<N: X> X for Vec<N> {
 
   fn serialize<A: Allocator, C: Continuation<A>>(
     &self,
-    mut serializer: Self::Serializer<A, C>,
+    mut serializer: <Self::View as View>::Serializer<A, C>,
   ) -> C {
     serializer.serialize_iterator(self.iter())
   }
@@ -22,7 +22,7 @@ impl X for String {
 
   fn serialize<A: Allocator, C: Continuation<A>>(
     &self,
-    mut serializer: Self::Serializer<A, C>,
+    mut serializer: <Self::View as View>::Serializer<A, C>,
   ) -> C {
     serializer.serialize_str(self)
   }

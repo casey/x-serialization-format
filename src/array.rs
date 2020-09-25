@@ -11,7 +11,7 @@ impl<E: X, const SIZE: usize> X for [E; SIZE] {
 
   fn serialize<A: Allocator, C: Continuation<A>>(
     &self,
-    mut serializer: Self::Serializer<A, C>,
+    mut serializer: <Self::View as View>::Serializer<A, C>,
   ) -> C {
     for element in self {
       serializer = serializer.element_serializer::<E>().serialize(element);
@@ -55,7 +55,7 @@ impl<A: Allocator, C: Continuation<A>, E: View, const SIZE: usize> Serializer<A,
 impl<A: Allocator, C: Continuation<A>, E: View, const SIZE: usize> ArraySerializer<A, C, E, SIZE> {
   pub fn element_serializer<N: X<View = E>>(
     self,
-  ) -> N::Serializer<A, ArraySerializer<A, C, E, SIZE>> {
+  ) -> <N::View as View>::Serializer<A, ArraySerializer<A, C, E, SIZE>> {
     if self.serialized == SIZE {
       todo!()
     }
@@ -66,7 +66,7 @@ impl<A: Allocator, C: Continuation<A>, E: View, const SIZE: usize> ArraySerializ
       .state
       .transform(|inner| ArraySeed { serialized, inner });
 
-    N::Serializer::new(state)
+    <N::View as View>::Serializer::new(state)
   }
 
   pub fn element<N: X<View = E>>(self, element: N) -> Self {

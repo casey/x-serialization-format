@@ -5,7 +5,7 @@ impl X for char {
 
   fn serialize<A: Allocator, C: Continuation<A>>(
     &self,
-    mut serializer: Self::Serializer<A, C>,
+    mut serializer: <Self::View as View>::Serializer<A, C>,
   ) -> C {
     serializer.serialize_char(*self)
   }
@@ -16,7 +16,7 @@ impl X for Char {
 
   fn serialize<A: Allocator, C: Continuation<A>>(
     &self,
-    mut serializer: Self::Serializer<A, C>,
+    mut serializer: <Self::View as View>::Serializer<A, C>,
   ) -> C {
     serializer.serialize_char(char::from_view(self))
   }

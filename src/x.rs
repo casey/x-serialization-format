@@ -7,27 +7,30 @@ pub use x_derive::X;
 pub trait X: Sized {
   type View: View;
 
-  type Serializer<A: Allocator, C: Continuation<A>>: Serializer<A, C> =
-    <<Self as X>::View as View>::Serializer<A, C>;
-
-  fn store<A: Allocator>(allocator: A) -> Self::Serializer<A, Done<A>> {
+  // TODO: Can I get rid of the as X and just use as View?
+  fn store<A: Allocator>(allocator: A) -> <Self::View as View>::Serializer<A, Done<A>> {
     let mut state = State::new(allocator, ());
 
     // Allocate space for the root object:
     state.push(mem::size_of::<Self::View>());
 
     // Return the serializer:
-    Self::Serializer::new(state)
+    <Self::View as View>::Serializer::new(state)
   }
 
-  fn serialize<A: Allocator, C: Continuation<A>>(&self, serializer: Self::Serializer<A, C>) -> C;
+  fn serialize<A: Allocator, C: Continuation<A>>(
+    &self,
+    serializer: <Self::View as View>::Serializer<A, C>,
+  ) -> C;
 
-  fn store_to_slice(slice: &mut [u8]) -> Self::Serializer<SliceAllocator, Done<SliceAllocator>> {
+  fn store_to_slice(
+    slice: &mut [u8],
+  ) -> <Self::View as View>::Serializer<SliceAllocator, Done<SliceAllocator>> {
     Self::store(SliceAllocator::new(slice))
   }
 
   #[cfg(feature = "alloc")]
-  fn store_to_vec() -> Self::Serializer<VecAllocator, Done<VecAllocator>> {
+  fn store_to_vec() -> <Self::View as View>::Serializer<VecAllocator, Done<VecAllocator>> {
     Self::store(VecAllocator::new())
   }
 
@@ -41,14 +44,13 @@ pub trait X: Sized {
   }
 }
 
-// TODO: I want this blanket impl, so references to types also implement X, but
-// I ran into a compiler ICE after I switched code over to use it.
-
 impl<T: X> X for &T {
-  type Serializer<A: Allocator, C: Continuation<A>> = <T as X>::Serializer<A, C>;
   type View = <T as X>::View;
 
-  fn serialize<A: Allocator, C: Continuation<A>>(&self, serializer: Self::Serializer<A, C>) -> C {
-    <T as X>::serialize(*self, serializer)
+  fn serialize<A: Allocator, C: Continuation<A>>(
+    &self,
+    serializer: <Self::View as View>::Serializer<A, C>,
+  ) -> C {
+    T::serialize(*self, serializer)
   }
 }
