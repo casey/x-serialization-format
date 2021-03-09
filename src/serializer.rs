@@ -6,7 +6,7 @@ pub trait Serializer<A: Allocator, C: Continuation<A>>: Sized {
   fn serialize<N, V>(self, value: &N) -> C
   where
     N: X<View = V>,
-    V: View<Serializer = Self>,
+    V: View<Serializer<A, C> = Self>,
   {
     value.serialize(self)
   }

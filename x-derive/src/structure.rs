@@ -208,7 +208,10 @@ impl Tokens for Structure {
       impl #x::X for #ident {
         type View = #view;
 
-        fn serialize<A: #x::Allocator, C: #x::Continuation<A>>(&self, serializer: <Self::View as View>::Serializer<A, C>) -> C {
+        fn serialize<A: #x::Allocator, C: #x::Continuation<A>>(
+          &self,
+          serializer: <Self::View as View>::Serializer<A, C>,
+        ) -> C {
           #serialize_inner
         }
       }
@@ -250,7 +253,10 @@ impl Tokens for Structure {
       impl <A: #x::Allocator, C: #x::Continuation<A>> #serializers<A, C> {
         fn #field_methods<N, V>(self, value: &N) -> #continuations
           where N: #x::X<View = V>,
-                V: #x::View<Serializer = <<#types as #x::X>::View as #x::View>::Serializer<A, #continuations>>,
+                V: #x::View<
+                  Serializer<A, #continuations> =
+                    <<#types as #x::X>::View as #x::View>::Serializer<A, #continuations>
+                >,
         {
           self.#serializer_methods().serialize(value)
         }
@@ -293,7 +299,10 @@ mod tests {
       impl ::x::X for Foo {
         type View = FooView;
 
-        fn serialize<A: ::x::Allocator, C: ::x::Continuation<A>>(&self, serializer: Self::Serializer<A, C>) -> C {
+        fn serialize<A: ::x::Allocator, C: ::x::Continuation<A>>(
+          &self,
+          serializer: <Self::View as View>::Serializer<A, C>,
+        ) -> C {
           serializer.state.continuation()
         }
       }
@@ -336,7 +345,10 @@ mod tests {
       impl ::x::X for Foo {
         type View = FooView;
 
-        fn serialize<A: ::x::Allocator, C: ::x::Continuation<A>>(&self, serializer: Self::Serializer<A, C>) -> C {
+        fn serialize<A: ::x::Allocator, C: ::x::Continuation<A>>(
+          &self,
+          serializer: Self::Serializer<A, C>
+        ) -> C {
           serializer.a(&self.a).b(&self.b)
         }
       }
