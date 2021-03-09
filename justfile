@@ -12,13 +12,13 @@ export RUST_LOG := log
 
 # watch filesystem for changes and rerun tests
 watch +ARGS='':
-	cargo +nightly watch --clear --shell 'cargo +nightly test --all {{ARGS}}'
+	cargo watch --clear --shell 'cargo test --all {{ARGS}}'
 
 watch-pager +ARGS='':
-	cargo +nightly watch \
+	cargo watch \
 		--clear \
 		--shell \
-		'cargo +nightly test --all --color always {{ARGS}} -- --color always 2>&1 | sed s///g | bat --plain --paging always'
+		'cargo test --all --color always {{ARGS}} -- --color always 2>&1 | sed s///g | bat --plain --paging always'
 
 push:
 	! git branch | grep '* master'
@@ -33,13 +33,13 @@ done BRANCH=`git rev-parse --abbrev-ref HEAD`:
 	git branch -D {{BRANCH}}
 
 test:
-	cargo +nightly test --all
+	cargo test --all
 
 clippy:
-	cargo +nightly clippy --all
+	cargo clippy --all
 
 fmt:
-	cargo +nightly fmt --all
+	cargo fmt --all
 
 lint:
 	./bin/lint
@@ -54,7 +54,7 @@ check-minimal-versions:
 
 check: test clippy lint check-minimal-versions
 	git diff --no-ext-diff --quiet --exit-code
-	cargo +nightly fmt --all -- --check
+	cargo fmt --all -- --check
 
 draft: push
 	hub pull-request -o --draft
@@ -71,7 +71,7 @@ merge BRANCH=`git rev-parse --abbrev-ref HEAD`:
 	just done {{BRANCH}}
 
 publish-check: check
-	cargo +nightly outdated --exit-code 1
+	cargo outdated --exit-code 1
 
 publish: publish-check
 	#!/usr/bin/env bash
@@ -81,8 +81,11 @@ publish: publish-check
 	done
 	git tag -a {{version}} -m 'Release {{version}}'
 	git push github {{version}}
-	cargo +nightly publish
+	cargo publish
 	just merge
 
 preview-readme:
 	grip -b README.md
+
+set-override:
+	rustup override set nightly
