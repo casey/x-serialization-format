@@ -4,7 +4,6 @@
 #![feature(concat_idents)]
 #![feature(generic_associated_types)]
 #![feature(maybe_uninit_ref)]
-#![feature(min_const_generics)]
 #![feature(raw_ref_op)]
 #![feature(try_reserve)]
 #![allow(incomplete_features)]
