@@ -6,6 +6,7 @@
 #![feature(maybe_uninit_ref)]
 #![feature(raw_ref_op)]
 #![feature(try_reserve)]
+#![feature(assert_matches)]
 #![allow(incomplete_features)]
 #![allow(unused)] // TODO: Remove this
 

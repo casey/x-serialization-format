@@ -101,6 +101,21 @@ mod tests {
   }
 
   #[test]
+  fn match_none() {
+    let buffer = &[0, 0];
+    let view = Option::<u8>::load(buffer).unwrap();
+    assert_matches!(view, Option::None);
+  }
+  
+  #[test]
+  fn match_some() {
+    let buffer = &[1, 77];
+    let view = Option::<u8>::load(buffer).unwrap();
+    assert_matches!(view, Option::Some(77));
+  }
+
+
+  #[test]
   fn invalid_discriminant() {
     assert_eq!(
       core::option::Option::<u8>::view(&[2, 0]).unwrap_err(),
