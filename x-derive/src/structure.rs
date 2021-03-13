@@ -441,7 +441,10 @@ mod tests {
       impl ::x::X for Foo {
         type View = FooView;
 
-        fn serialize<A: ::x::Allocator, C: ::x::Continuation<A>>(&self, serializer: Self::Serializer<A, C>) -> C {
+        fn serialize<A: ::x::Allocator, C: ::x::Continuation<A>>(
+          &self,
+          serializer: <Self::View as View>::Serializer<A, C>,
+        ) -> C {
           serializer.zero(&self.0).one(&self.1)
         }
       }
@@ -484,8 +487,8 @@ mod tests {
       }
 
       impl<A: ::x::Allocator, C: ::x::Continuation<A>> FooSerializer<A, C> {
-        fn zero<N>(self, value: &N) -> FooSerializerOne<A, C>
-          where N: ::x::X<Serializer = <u16 as ::x::X>::Serializer<A, C>>,
+        fn zero<N, V>(self, value: &N) -> FooSerializerOne<A, C>
+          where N: ::x::X<Serializer<A, ::x::Continuation<A>> = <u16 as ::x::X>::Serializer<A, C>>,
         {
           self.zero_serializer().serialize(value)
         }
